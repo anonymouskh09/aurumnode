@@ -23,12 +23,19 @@ class UserFactory extends Factory
      */
     public function definition(): array
     {
+        $username = fake()->unique()->userName();
+        $username = preg_replace('/[^a-zA-Z0-9_]/', '', $username) ?: 'user'.fake()->unique()->numberBetween(1, 99999);
+
         return [
             'name' => fake()->name(),
+            'username' => $username,
             'email' => fake()->unique()->safeEmail(),
             'email_verified_at' => now(),
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
+            'sponsor_id' => null,
+            'placement_side' => null,
+            'status' => \App\Models\User::STATUS_FREE,
         ];
     }
 

@@ -3,23 +3,47 @@
 namespace Database\Seeders;
 
 use App\Models\User;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use App\Services\BinaryPlacementService;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
 
 class DatabaseSeeder extends Seeder
 {
-    use WithoutModelEvents;
-
-    /**
-     * Seed the application's database.
-     */
     public function run(): void
     {
-        // User::factory(10)->create();
+        $this->call([PackageSeeder::class, RankSeeder::class, LeaderPackageSeeder::class, SettingsSeeder::class]);
 
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-        ]);
+        $admin = User::firstOrCreate(
+            ['username' => 'admin'],
+            [
+                'name' => 'Admin User',
+                'email' => 'admin@aurumnode.test',
+                'password' => Hash::make('password'),
+                'sponsor_id' => null,
+                'placement_side' => null,
+                'status' => User::STATUS_FREE,
+                'is_admin' => true,
+            ]
+        );
+
+        if (! $admin->is_admin) {
+            $admin->update(['is_admin' => true]);
+        }
+
+        $testUser = User::firstOrCreate(
+            ['username' => 'testuser'],
+            [
+                'name' => 'Test User',
+                'email' => 'test@example.com',
+                'password' => Hash::make('password'),
+                'sponsor_id' => $admin->id,
+                'placement_side' => User::PLACEMENT_LEFT,
+                'status' => User::STATUS_FREE,
+            ]
+        );
+
+        if (! $testUser->binary_parent_id) {
+            app(BinaryPlacementService::class)->placeUser($testUser, $admin, 'left');
+        }
     }
 }

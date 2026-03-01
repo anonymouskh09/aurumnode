@@ -2,15 +2,19 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
 class User extends Authenticatable
 {
-    /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable;
+
+    public const STATUS_FREE = 'free';
+    public const STATUS_PAID = 'paid';
+
+    public const PLACEMENT_LEFT = 'left';
+    public const PLACEMENT_RIGHT = 'right';
 
     /**
      * The attributes that are mass assignable.
@@ -19,8 +23,28 @@ class User extends Authenticatable
      */
     protected $fillable = [
         'name',
+        'username',
         'email',
+        'mobile',
+        'country',
+        'city',
+        'address',
         'password',
+        'transaction_password',
+        'usdt_address',
+        'sponsor_id',
+        'placement_side',
+        'left_child_id',
+        'right_child_id',
+        'binary_parent_id',
+        'left_points_total',
+        'right_points_total',
+        'active_package_id',
+        'left_carry_total',
+        'right_carry_total',
+        'status',
+        'is_admin',
+        'is_blocked',
     ];
 
     /**
@@ -31,6 +55,7 @@ class User extends Authenticatable
     protected $hidden = [
         'password',
         'remember_token',
+        'transaction_password',
     ];
 
     /**
@@ -43,6 +68,92 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'transaction_password' => 'hashed',
+            'left_points_total' => 'decimal:2',
+            'right_points_total' => 'decimal:2',
+            'is_admin' => 'boolean',
+            'is_blocked' => 'boolean',
         ];
+    }
+
+    /**
+     * Sponsor (referrer) who invited this user.
+     */
+    public function sponsor()
+    {
+        return $this->belongsTo(User::class, 'sponsor_id');
+    }
+
+    /**
+     * Users referred by this user (downline / direct team).
+     */
+    public function referrals()
+    {
+        return $this->hasMany(User::class, 'sponsor_id');
+    }
+
+    public function wallet()
+    {
+        return $this->hasOne(\App\Models\Wallet::class);
+    }
+
+    public function userPackages()
+    {
+        return $this->hasMany(\App\Models\UserPackage::class);
+    }
+
+    public function withdrawals()
+    {
+        return $this->hasMany(\App\Models\Withdrawal::class);
+    }
+
+    public function transactions()
+    {
+        return $this->hasMany(\App\Models\Transaction::class);
+    }
+
+    public function kycDocuments()
+    {
+        return $this->hasMany(\App\Models\KycDocument::class);
+    }
+
+    public function binaryParent()
+    {
+        return $this->belongsTo(User::class, 'binary_parent_id');
+    }
+
+    public function leftChild()
+    {
+        return $this->belongsTo(User::class, 'left_child_id');
+    }
+
+    public function rightChild()
+    {
+        return $this->belongsTo(User::class, 'right_child_id');
+    }
+
+    public function userRanks()
+    {
+        return $this->belongsToMany(\App\Models\Rank::class, 'user_ranks')->withPivot('achieved_at')->withTimestamps();
+    }
+
+    public function heldEarnings()
+    {
+        return $this->hasMany(\App\Models\HeldEarning::class);
+    }
+
+    public function activeUserPackage()
+    {
+        return $this->belongsTo(UserPackage::class, 'active_package_id');
+    }
+
+    public function isAdmin(): bool
+    {
+        return (bool) $this->is_admin;
+    }
+
+    public function isPaid(): bool
+    {
+        return $this->status === self::STATUS_PAID;
     }
 }
