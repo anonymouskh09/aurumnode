@@ -2,12 +2,8 @@ name: Deploy to VPS
 
 on:
   push:
-    branches: ["main"]
+    branches: [ "main" ]
   workflow_dispatch:
-
-concurrency:
-  group: deploy-production
-  cancel-in-progress: true
 
 jobs:
   deploy:
@@ -17,60 +13,36 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup SSH (from base64 key)
+      - name: Setup SSH key
         shell: bash
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.VPS_SSH_KEY_B64 }}" | base64 -d > ~/.ssh/id_ed25519
+          echo "${{ secrets.VPS_SSH_KEY }}" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
           ssh-keyscan -H "${{ secrets.VPS_HOST }}" >> ~/.ssh/known_hosts
 
       - name: Deploy
         shell: bash
         run: |
-          ssh -o StrictHostKeyChecking=yes "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}" << 'EOF'
-          set -e
+          ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=yes "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}" << 'EOF'
+            set -e
+            cd "${{ secrets.APP_DIR }}"
 
-          cd "${APP_DIR}"
+            git fetch --all
+            git reset --hard origin/main
 
-          echo "== Pull latest code =="
-          git fetch --all
-          git reset --hard origin/main
+            composer install --no-interaction --no-dev --prefer-dist --optimize-autoloader
 
-          echo "== Install PHP deps =="
-          if ! command -v composer >/dev/null 2>&1; then
-            echo "Composer not found"; exit 1
-          fi
-          composer install --no-interaction --prefer-dist --optimize-autoloader --no-dev
-
-          echo "== Ensure permissions =="
-          chown -R www-data:www-data .
-          chmod -R 775 storage bootstrap/cache
-
-          echo "== Laravel optimize & migrate =="
-          php artisan config:clear || true
-          php artisan cache:clear || true
-          php artisan route:clear || true
-          php artisan view:clear || true
-          php artisan migrate --force
-          php artisan storage:link || true
-          php artisan optimize
-
-          echo "== Build frontend (Vite) if package.json exists =="
-          if [ -f package.json ]; then
-            if ! command -v npm >/dev/null 2>&1; then
-              echo "npm not found"; exit 1
+            # If node/npm needed for build (only if your project uses it)
+            if command -v npm >/dev/null 2>&1; then
+              npm ci
+              npm run build
             fi
-            npm ci
-            npm run build
-          fi
 
-          echo "== Restart services (optional) =="
-          # If you use PHP-FPM / nginx, uncomment if needed:
-          # systemctl restart php8.3-fpm || true
-          # systemctl reload nginx || true
+            php artisan migrate --force || true
+            php artisan optimize
 
-          echo "✅ Deploy done"
+            # Restart services (ignore if not present)
+            systemctl restart php8.3-fpm 2>/dev/null || true
+            systemctl reload nginx 2>/dev/null || true
           EOF
-        env:
-          APP_DIR: ${{ secrets.APP_DIR }}
