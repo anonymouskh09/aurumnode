@@ -3,7 +3,10 @@
 @tailwind utilities;
 
 @layer base {
+    html {
+        overflow-x: hidden;
+    }
     body {
-        @apply antialiased text-slate-700;
+        @apply antialiased text-slate-700 overflow-x-hidden min-h-screen;
     }
 }

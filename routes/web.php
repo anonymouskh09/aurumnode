@@ -18,7 +18,6 @@ use App\Http\Controllers\Dashboard\DirectBonusController;
 use App\Http\Controllers\Dashboard\BinaryBonusController;
 use App\Http\Controllers\Dashboard\BinaryTreeController;
 use App\Http\Controllers\Dashboard\RoiController;
-use App\Http\Controllers\Dashboard\TopController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -65,7 +64,6 @@ Route::middleware(['auth', 'user.only'])->prefix('dashboard')->name('dashboard.'
     Route::get('/direct-bonus', [DirectBonusController::class, 'index'])->name('direct-bonus');
     Route::get('/binary-bonus', [BinaryBonusController::class, 'index'])->name('binary-bonus');
     Route::get('/roi', [RoiController::class, 'index'])->name('roi');
-    Route::get('/top', [TopController::class, 'index'])->name('top');
     Route::get('/rank', [\App\Http\Controllers\Dashboard\RankController::class, 'index'])->name('rank');
 });
 
@@ -100,4 +98,5 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/earnings-ledger', [\App\Http\Controllers\Admin\EarningsLedgerController::class, 'index'])->name('earnings-ledger.index');
     Route::get('/payout-runs', [\App\Http\Controllers\Admin\PayoutRunsController::class, 'index'])->name('payout-runs.index');
     Route::get('/audit-logs', [\App\Http\Controllers\Admin\AuditLogsController::class, 'index'])->name('audit-logs.index');
+    Route::get('/top', [\App\Http\Controllers\Admin\TopController::class, 'index'])->name('top');
 });

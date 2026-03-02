@@ -20,6 +20,7 @@ class PackageController extends Controller
     {
         $packages = Package::where('status', 'active')
             ->where('is_admin_only', false)
+            ->where('is_leader', false)
             ->orderBy('price_usd')
             ->get()
             ->map(fn ($p) => array_merge($p->toArray(), ['display_name' => $p->getDisplayName()]));
@@ -42,7 +43,7 @@ class PackageController extends Controller
         if ($package->status !== 'active') {
             return back()->withErrors(['package_id' => 'Package is not available.']);
         }
-        if ($package->is_admin_only) {
+        if ($package->is_admin_only || $package->is_leader) {
             return back()->withErrors(['package_id' => 'This package can only be activated by admin.']);
         }
 
