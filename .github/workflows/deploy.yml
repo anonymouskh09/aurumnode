@@ -2,7 +2,7 @@ name: Deploy to VPS
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   workflow_dispatch:
 
 jobs:
@@ -13,18 +13,34 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup SSH key
+      - name: Setup SSH
         shell: bash
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.VPS_SSH_KEY }}" > ~/.ssh/id_ed25519
+          chmod 700 ~/.ssh
+
+          # Write key exactly as-is (preserve newlines)
+          cat > ~/.ssh/id_ed25519 <<'KEY'
+${{ secrets.VPS_SSH_KEY }}
+KEY
+
+          # Remove CRLF if any
+          tr -d '\r' < ~/.ssh/id_ed25519 > ~/.ssh/id_ed25519.tmp && mv ~/.ssh/id_ed25519.tmp ~/.ssh/id_ed25519
+
           chmod 600 ~/.ssh/id_ed25519
           ssh-keyscan -H "${{ secrets.VPS_HOST }}" >> ~/.ssh/known_hosts
+
+      - name: SSH Test
+        shell: bash
+        run: |
+          ssh -i ~/.ssh/id_ed25519 -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes \
+            "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}" "whoami && hostname"
 
       - name: Deploy
         shell: bash
         run: |
-          ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=yes "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}" << 'EOF'
+          ssh -i ~/.ssh/id_ed25519 -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes \
+            "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}" <<'EOF'
             set -e
             cd "${{ secrets.APP_DIR }}"
 
@@ -33,7 +49,6 @@ jobs:
 
             composer install --no-interaction --no-dev --prefer-dist --optimize-autoloader
 
-            # If node/npm needed for build (only if your project uses it)
             if command -v npm >/dev/null 2>&1; then
               npm ci
               npm run build
@@ -42,7 +57,6 @@ jobs:
             php artisan migrate --force || true
             php artisan optimize
 
-            # Restart services (ignore if not present)
             systemctl restart php8.3-fpm 2>/dev/null || true
             systemctl reload nginx 2>/dev/null || true
           EOF
