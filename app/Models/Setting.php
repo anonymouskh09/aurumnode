@@ -14,6 +14,13 @@ class Setting extends Model
     public const CACHE_KEY = 'aurum_settings';
     public const CACHE_TTL = 3600;
 
+    /** Table uses `key` as primary key, not `id`. */
+    protected $primaryKey = 'key';
+
+    public $incrementing = false;
+
+    protected $keyType = 'string';
+
     protected $fillable = ['key', 'value', 'group'];
 
     /**

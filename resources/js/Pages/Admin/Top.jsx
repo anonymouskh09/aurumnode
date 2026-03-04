@@ -10,7 +10,7 @@ export default function AdminTop({ topByVolume, topByInvestment }) {
                 <Card>
                     <CardHeader
                         title="Top by volume"
-                        subtitle="Members with highest left + right leg points"
+                        subtitle="Members with highest left + right leg volume (USDT)"
                     />
                     <CardBody className="p-0">
                         <Table>
@@ -37,7 +37,7 @@ export default function AdminTop({ topByVolume, topByInvestment }) {
                                                 <span className="text-slate-500 ml-1">@{u.username}</span>
                                             </Td>
                                             <Td align="right" className="font-semibold">
-                                                {parseFloat(u.total_volume ?? 0).toLocaleString(undefined, { minimumFractionDigits: 0 })} pts
+                                                ${parseFloat(u.total_volume ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                                             </Td>
                                         </TableRow>
                                     ))
@@ -59,7 +59,7 @@ export default function AdminTop({ topByVolume, topByInvestment }) {
                             <TableHeader>
                                 <Th>#</Th>
                                 <Th>Member</Th>
-                                <Th align="right">Total invested</Th>
+                                <Th align="right">Total invested (USDT)</Th>
                             </TableHeader>
                             <TableBody>
                                 {topByInvestment?.length ? (

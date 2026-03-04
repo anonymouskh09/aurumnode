@@ -9,7 +9,8 @@ export default function AdminSettings({ settings, packages }) {
     const form = useForm({
         withdrawal_min_usd: settings?.withdrawal_min_usd ?? 20,
         withdrawal_fee_percent: settings?.withdrawal_fee_percent ?? 2,
-        withdrawal_allowed_days: settings?.withdrawal_allowed_days ?? [3, 4, 5],
+        withdrawal_allowed_days: settings?.withdrawal_allowed_days ?? [0, 1, 2, 3, 4, 5, 6],
+        kyc_required_for_withdrawal: settings?.kyc_required_for_withdrawal ?? false,
         binary_bonus_percent: settings?.binary_bonus_percent ?? 10,
         binary_run_at_dubai_time: settings?.binary_run_at_dubai_time ?? '00:00',
         roi_global_enabled: settings?.roi_global_enabled ?? true,
@@ -42,7 +43,7 @@ export default function AdminSettings({ settings, packages }) {
                             <input type="number" step="0.01" min="0" max="100" value={form.data.withdrawal_fee_percent} onChange={(e) => form.setData('withdrawal_fee_percent', e.target.value)} className="w-full rounded-lg border border-slate-300 px-3 py-2" />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-2">Allowed days (e.g. Wed, Thu, Fri = 3,4,5)</label>
+                            <label className="block text-sm font-medium text-slate-700 mb-2">Allowed days (uncheck to restrict; all checked = any time)</label>
                             <div className="flex flex-wrap gap-2">
                                 {[0, 1, 2, 3, 4, 5, 6].map((d) => (
                                     <label key={d} className="flex items-center gap-1">
@@ -51,6 +52,13 @@ export default function AdminSettings({ settings, packages }) {
                                     </label>
                                 ))}
                             </div>
+                        </div>
+                        <div>
+                            <label className="flex items-center gap-2">
+                                <input type="checkbox" checked={form.data.kyc_required_for_withdrawal} onChange={(e) => form.setData('kyc_required_for_withdrawal', e.target.checked)} />
+                                <span>Require KYC approval for withdrawal</span>
+                            </label>
+                            <p className="text-xs text-slate-500 mt-1">When enabled, users must have at least one approved KYC document before they can request a withdrawal.</p>
                         </div>
                     </CardBody>
                 </Card>

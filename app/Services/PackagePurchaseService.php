@@ -26,6 +26,9 @@ class PackagePurchaseService
         $isLeader = (bool) $package->is_leader;
 
         DB::transaction(function () use ($user, $package, $amount, $isLeader) {
+            // Deduct from deposit_wallet (USDT) so transferred funds can be used for packages
+            $this->walletService->deductFromDeposit($user, $amount);
+
             $capMultiplier = 4;
             $maxCap = round($amount * $capMultiplier, 2);
 

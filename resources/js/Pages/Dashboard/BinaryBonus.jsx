@@ -19,13 +19,13 @@ export default function BinaryBonus({ logs, totalEarned, balance, leftTotal, rig
                 />
                 <StatCard
                     icon={ChevronLeft}
-                    label="Left leg points"
-                    value={(leftTotal ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                    label="Left leg (USDT)"
+                    value={`$${(leftTotal ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}`}
                 />
                 <StatCard
                     icon={ChevronRight}
-                    label="Right leg points"
-                    value={(rightTotal ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                    label="Right leg (USDT)"
+                    value={`$${(rightTotal ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}`}
                 />
             </div>
 
@@ -38,11 +38,11 @@ export default function BinaryBonus({ logs, totalEarned, balance, leftTotal, rig
                     <Table>
                         <TableHeader>
                             <Th>Date</Th>
-                            <Th align="right">Left points</Th>
-                            <Th align="right">Right points</Th>
-                            <Th align="right">Matched (lesser)</Th>
+                            <Th align="right">Left (USDT)</Th>
+                            <Th align="right">Right (USDT)</Th>
+                            <Th align="right">Matched (USDT)</Th>
                             <Th align="right">% used</Th>
-                            <Th align="right">Payout</Th>
+                            <Th align="right">Payout (USDT)</Th>
                         </TableHeader>
                         <TableBody>
                             {logs?.length ? (
@@ -51,9 +51,9 @@ export default function BinaryBonus({ logs, totalEarned, balance, leftTotal, rig
                                         <Td className="text-slate-600">
                                             {new Date(log.date).toLocaleDateString()}
                                         </Td>
-                                        <Td align="right">{parseFloat(log.left_points).toLocaleString(undefined, { minimumFractionDigits: 2 })}</Td>
-                                        <Td align="right">{parseFloat(log.right_points).toLocaleString(undefined, { minimumFractionDigits: 2 })}</Td>
-                                        <Td align="right">{parseFloat(log.lesser_points).toLocaleString(undefined, { minimumFractionDigits: 2 })}</Td>
+                                        <Td align="right">${parseFloat(log.left_points).toLocaleString(undefined, { minimumFractionDigits: 2 })}</Td>
+                                        <Td align="right">${parseFloat(log.right_points).toLocaleString(undefined, { minimumFractionDigits: 2 })}</Td>
+                                        <Td align="right">${parseFloat(log.lesser_points).toLocaleString(undefined, { minimumFractionDigits: 2 })}</Td>
                                         <Td align="right">{parseFloat(log.percent_used)}%</Td>
                                         <Td align="right" className="font-semibold text-green-600">
                                             +${parseFloat(log.payout_amount).toFixed(2)}

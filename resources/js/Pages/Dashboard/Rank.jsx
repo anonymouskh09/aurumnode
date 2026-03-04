@@ -29,9 +29,9 @@ export default function Rank({ currentRank, nextRank, lesserSide }) {
 
                 <Card>
                     <CardBody>
-                        <p className="text-sm text-slate-500">Lesser side business</p>
+                        <p className="text-sm text-slate-500">Lesser side business (USDT)</p>
                         <p className="text-2xl font-bold text-slate-900 mt-1">
-                            {(lesserSide ?? 0).toLocaleString()} points
+                            ${(lesserSide ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                         </p>
                     </CardBody>
                 </Card>
@@ -49,11 +49,11 @@ export default function Rank({ currentRank, nextRank, lesserSide }) {
                                 </div>
                             </div>
                             <p className="text-sm text-slate-600">
-                                Required: {required.toLocaleString()} lesser side points
+                                Required: ${required.toLocaleString(undefined, { minimumFractionDigits: 2 })} lesser side (USDT)
                             </p>
                             <ProgressBar value={lesserSide ?? 0} max={required} showLabel className="mt-2" />
                             <p className="text-sm font-medium text-teal-600 mt-2">
-                                Remaining: {remaining.toLocaleString()} points
+                                Remaining: ${remaining.toLocaleString(undefined, { minimumFractionDigits: 2 })} USDT
                             </p>
                         </CardBody>
                     </Card>

@@ -31,7 +31,7 @@ export default function DashboardIndex({
     referralLinks,
     wallet,
     totalInvestment,
-    totalPV,
+    totalVolumeUsdt,
     activePackageCard,
     investmentBalance,
     earningsBalance,
@@ -44,6 +44,7 @@ export default function DashboardIndex({
     const remaining = Math.max(0, maxEarning - (cap > 0 ? totalEarningsFromCap : totalEarned));
 
     const walletCards = [
+        { key: 'deposit_wallet', label: 'Deposit Wallet (USDT)', subtitle: 'Use for packages or transfer to users', locked: false },
         { key: 'investment_wallet', label: 'Locked Investment', subtitle: 'Withdrawal not available', locked: true },
         { key: 'withdrawal_wallet', label: 'Withdrawal Wallet', subtitle: 'Ready to withdraw', locked: false },
         { key: 'direct_bonus_wallet', label: 'Direct Bonus', subtitle: '10% from referrals', locked: false },
@@ -52,8 +53,8 @@ export default function DashboardIndex({
     ];
 
     const stats = [
-        { label: 'Total PV', value: (totalPV ?? 0).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 }) + ' pts', icon: TrendingUp },
-        { label: 'Earnings balance', value: `$${Number(earningsBalance ?? 0).toFixed(2)}`, icon: PiggyBank },
+        { label: 'Total volume (USDT)', value: `$${Number(totalVolumeUsdt ?? 0).toFixed(2)}`, icon: TrendingUp },
+        { label: 'Earnings balance (USDT)', value: `$${Number(earningsBalance ?? 0).toFixed(2)}`, icon: PiggyBank },
         { label: 'Earned (cap)', value: `$${totalEarningsFromCap.toFixed(2)}`, icon: DollarSign },
         { label: 'Remaining to cap', value: `$${remaining.toFixed(2)}`, icon: Wallet },
     ];
@@ -63,8 +64,21 @@ export default function DashboardIndex({
             <div className="space-y-8">
                 {/* Deposit / Investment Section */}
                 <section>
-                    <h2 className="text-lg font-semibold text-slate-900 mb-4">Deposit / Investment</h2>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <h2 className="text-lg font-semibold text-slate-900 mb-4">Deposit / Investment (USDT)</h2>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <Card className="border-2 border-teal-200 bg-teal-50/50">
+                            <CardBody className="flex flex-col">
+                                <div className="flex items-center gap-2 text-teal-800">
+                                    <Wallet className="w-5 h-5 shrink-0" />
+                                    <span className="font-semibold">Deposit Wallet (USDT)</span>
+                                </div>
+                                <p className="text-2xl font-bold text-slate-900 mt-2">${Number(wallet?.deposit_wallet ?? 0).toFixed(2)}</p>
+                                <p className="text-sm text-slate-600 mt-1">Use for packages or transfer to other users.</p>
+                                <Link href="/dashboard/transfers" className="mt-3">
+                                    <Button variant="primary" size="sm">Transfer to user</Button>
+                                </Link>
+                            </CardBody>
+                        </Card>
                         <Card className="border-2 border-amber-200 bg-amber-50/50">
                             <CardBody className="flex flex-col">
                                 <div className="flex items-center gap-2 text-amber-800">
@@ -123,7 +137,7 @@ export default function DashboardIndex({
 
                 {/* Wallet Cards Grid */}
                 <section>
-                    <h2 className="text-lg font-semibold text-slate-900 mb-4">Wallets</h2>
+                    <h2 className="text-lg font-semibold text-slate-900 mb-4">Wallets (USDT)</h2>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
                         {walletCards.map(({ key, label, subtitle, locked }) => {
                             const Icon = walletIcons[key] || Wallet;

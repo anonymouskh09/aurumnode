@@ -13,10 +13,11 @@ class SettingsSeeder extends Seeder
     public function run(): void
     {
         $defaults = [
-            // Withdrawals
+            // Withdrawals (any day by default; admin can restrict days)
             'withdrawal_min_usd' => '20',
             'withdrawal_fee_percent' => '2',
-            'withdrawal_allowed_days' => json_encode([3, 4, 5]), // Wed, Thu, Fri
+            'withdrawal_allowed_days' => json_encode([0, 1, 2, 3, 4, 5, 6]), // All days = any time
+            'kyc_required_for_withdrawal' => '0', // When 1, user must have approved KYC to withdraw
             // Binary
             'binary_bonus_percent' => '10',
             'binary_run_at_dubai_time' => '00:00', // 12 AM Dubai

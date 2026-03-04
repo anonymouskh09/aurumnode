@@ -21,6 +21,11 @@ export default function Profile({ auth, kycDocuments, errors: serverErrors }) {
                     <CardBody>
                         <form onSubmit={(e) => { e.preventDefault(); profileForm.put('/dashboard/profile'); }} className="space-y-4">
                             <div>
+                                <label className="block text-sm font-medium text-slate-700 mb-1">Username</label>
+                                <p className="text-slate-700 font-medium py-2">{auth.user?.username ?? '—'}</p>
+                                <p className="text-xs text-slate-500">Your referral link uses this username.</p>
+                            </div>
+                            <div>
                                 <label className="block text-sm font-medium text-slate-700 mb-1">Name</label>
                                 <input type="text" value={profileForm.data.name} onChange={(e) => profileForm.setData('name', e.target.value)} className={inputClass} />
                                 {err('name') && <p className="text-sm text-red-600 mt-1">{err('name')}</p>}
@@ -57,7 +62,7 @@ function TransactionPasswordForm({ errors: serverErrors }) {
 
     return (
         <Card>
-            <CardHeader title="Transaction password" subtitle="Set or update your transaction password" />
+            <CardHeader title="Transaction password" subtitle="Set or update your transaction password. A verification email will be sent; click the link to confirm." />
             <CardBody>
                 <form onSubmit={(e) => { e.preventDefault(); post('/dashboard/profile/transaction-password'); }} className="space-y-4">
                     <div>

@@ -64,7 +64,7 @@ class UserPackageControlsController extends Controller
             $capMultiplier
         );
 
-        return back()->with('status', 'Access Package activated. 1,000,000 points added to '.$leg.' leg.');
+        return back()->with('status', 'Access Package activated. 1,000,000 USDT volume added to '.$leg.' leg.');
     }
 
     public function updateUserPackage(Request $request, UserPackage $userPackage): RedirectResponse

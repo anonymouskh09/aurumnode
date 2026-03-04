@@ -23,7 +23,7 @@ class DashboardController extends Controller
         $baseUrl = $request->getSchemeAndHttpHost();
 
         $totalInvestment = $user->userPackages()->sum('invested_amount');
-        $totalPV = (float) $user->left_points_total + (float) $user->right_points_total;
+        $totalVolumeUsdt = (float) $user->left_points_total + (float) $user->right_points_total;
 
         $activeUserPackage = $user->activeUserPackage;
         $activePackageCard = null;
@@ -54,7 +54,7 @@ class DashboardController extends Controller
             'referralLinks' => $referralLinks,
             'wallet' => $wallet,
             'totalInvestment' => number_format((float) $totalInvestment, 2, '.', ''),
-            'totalPV' => round($totalPV, 2),
+            'totalVolumeUsdt' => round($totalVolumeUsdt, 2),
             'activePackageCard' => $activePackageCard,
             'investmentBalance' => round($investmentBalance, 2),
             'earningsBalance' => round($earningsBalance, 2),

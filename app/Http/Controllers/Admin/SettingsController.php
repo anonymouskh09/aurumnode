@@ -25,7 +25,8 @@ class SettingsController extends Controller
             'settings' => [
                 'withdrawal_min_usd' => Setting::get('withdrawal_min_usd', 20),
                 'withdrawal_fee_percent' => Setting::get('withdrawal_fee_percent', 2),
-                'withdrawal_allowed_days' => Setting::get('withdrawal_allowed_days', [3, 4, 5]),
+                'withdrawal_allowed_days' => Setting::get('withdrawal_allowed_days', [0, 1, 2, 3, 4, 5, 6]),
+                'kyc_required_for_withdrawal' => (bool) Setting::get('kyc_required_for_withdrawal', false),
                 'binary_bonus_percent' => Setting::get('binary_bonus_percent', 10),
                 'binary_run_at_dubai_time' => Setting::get('binary_run_at_dubai_time', '00:00'),
                 'roi_global_enabled' => (bool) Setting::get('roi_global_enabled', true),
@@ -45,6 +46,7 @@ class SettingsController extends Controller
             'withdrawal_fee_percent' => ['sometimes', 'numeric', 'min:0', 'max:100'],
             'withdrawal_allowed_days' => ['sometimes', 'array'],
             'withdrawal_allowed_days.*' => ['integer', 'min:0', 'max:6'],
+            'kyc_required_for_withdrawal' => ['sometimes', 'boolean'],
             'binary_bonus_percent' => ['sometimes', 'numeric', 'min:0', 'max:100'],
             'binary_run_at_dubai_time' => ['sometimes', 'string', 'regex:/^\d{2}:\d{2}$/'],
             'roi_global_enabled' => ['sometimes', 'boolean'],

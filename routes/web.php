@@ -52,6 +52,7 @@ Route::middleware(['auth', 'user.only'])->prefix('dashboard')->name('dashboard.'
     Route::get('/profile', [ProfileController::class, 'index'])->name('profile');
     Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::post('/profile/transaction-password', [ProfileController::class, 'transactionPassword'])->name('profile.transaction-password');
+    Route::get('/profile/transaction-password/verify', [ProfileController::class, 'verifyTransactionPassword'])->name('profile.transaction-password.verify');
     Route::post('/profile/kyc', [ProfileController::class, 'kyc'])->name('profile.kyc');
     Route::get('/team', [TeamController::class, 'index'])->name('team');
     Route::get('/withdrawal', [WithdrawalController::class, 'index'])->name('withdrawal');

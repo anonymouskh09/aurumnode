@@ -3,10 +3,15 @@
 namespace App\Http\Controllers\Dashboard;
 
 use App\Http\Controllers\Controller;
+use App\Mail\TransactionPasswordVerifyMail;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Password;
+use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Facades\Mail;
 use Inertia\Inertia;
 use Inertia\Response;
 use Illuminate\Support\Facades\Storage;
@@ -58,11 +63,48 @@ class ProfileController extends Controller
 
         $request->validate($rules);
 
-        $user->update([
-            'transaction_password' => Hash::make($request->transaction_password),
-        ]);
+        $token = Str::random(64);
+        $passwordHash = Hash::make($request->transaction_password);
+        $cacheKey = 'tx_pw_verify_'.$token;
+        Cache::put($cacheKey, [
+            'user_id' => $user->id,
+            'password_hash' => $passwordHash,
+        ], now()->addMinutes(60));
 
-        return back()->with('status', 'Transaction password updated.');
+        $verifyUrl = URL::temporarySignedRoute(
+            'dashboard.profile.transaction-password.verify',
+            now()->addMinutes(60),
+            ['token' => $token]
+        );
+
+        Mail::to($user->email)->send(new TransactionPasswordVerifyMail($user, $verifyUrl));
+
+        return back()->with('status', 'A verification email has been sent. Click the link in the email to set your transaction password.');
+    }
+
+    public function verifyTransactionPassword(Request $request): RedirectResponse
+    {
+        if (! $request->hasValidSignature()) {
+            return redirect()->route('dashboard.profile')->with('error', 'Verification link has expired or is invalid.');
+        }
+
+        $token = $request->query('token');
+        if (! $token) {
+            return redirect()->route('dashboard.profile')->with('error', 'Invalid verification link.');
+        }
+
+        $cacheKey = 'tx_pw_verify_'.$token;
+        $data = Cache::get($cacheKey);
+        if (! $data || ($data['user_id'] ?? 0) !== $request->user()->id) {
+            return redirect()->route('dashboard.profile')->with('error', 'Verification link has expired or was already used.');
+        }
+
+        $request->user()->update([
+            'transaction_password' => $data['password_hash'],
+        ]);
+        Cache::forget($cacheKey);
+
+        return redirect()->route('dashboard.profile')->with('status', 'Transaction password has been set successfully.');
     }
 
     public function kyc(Request $request): RedirectResponse

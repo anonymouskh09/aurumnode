@@ -93,7 +93,7 @@ export default function AdminMembers({ members, packages, ranks, filters }) {
                                                 : '—'}
                                         </Td>
                                         <Td>
-                                            {(m.referrals_count ?? 0)} direct / L:{(m.left_points_total ?? 0)} R:{(m.right_points_total ?? 0)}
+                                            {(m.referrals_count ?? 0)} direct / L:${Number(m.left_points_total ?? 0).toFixed(2)} R:${Number(m.right_points_total ?? 0).toFixed(2)}
                                         </Td>
                                         <Td>
                                             <Link href={`/admin/members/${m.id}`}>

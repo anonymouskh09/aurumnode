@@ -32,10 +32,13 @@ class WithdrawalController extends Controller
         $withdrawals = $user->withdrawals()->latest()->get();
 
         $minUsd = (float) Setting::get('withdrawal_min_usd', 20);
-        $allowedDays = Setting::get('withdrawal_allowed_days', [3, 4, 5]); // Wed=3, Thu=4, Fri=5
+        $allowedDays = Setting::get('withdrawal_allowed_days', [0, 1, 2, 3, 4, 5, 6]);
         $feePercent = (float) Setting::get('withdrawal_fee_percent', 2);
         $todayDubai = (int) Carbon::now('Asia/Dubai')->format('N'); // 1=Mon, 7=Sun (ISO 8601)
         $allowedToday = is_array($allowedDays) && in_array($todayDubai, $allowedDays, true);
+
+        $kycRequiredForWithdrawal = (bool) Setting::get('kyc_required_for_withdrawal', false);
+        $hasKycApproved = $user->kycDocuments()->where('status', 'approved')->exists();
 
         return Inertia::render('Dashboard/Withdrawal', [
             'wallet' => $wallet,
@@ -44,6 +47,9 @@ class WithdrawalController extends Controller
             'withdrawal_allowed_days' => $allowedDays,
             'withdrawal_fee_percent' => $feePercent,
             'withdrawal_allowed_today' => $allowedToday,
+            'kyc_required_for_withdrawal' => $kycRequiredForWithdrawal,
+            'has_kyc_approved' => $hasKycApproved,
+            'show_kyc_required_notice' => $kycRequiredForWithdrawal && ! $hasKycApproved,
         ]);
     }
 
@@ -53,12 +59,17 @@ class WithdrawalController extends Controller
         $wallet = $this->walletService->getOrCreateWallet($user);
 
         $minUsd = (float) Setting::get('withdrawal_min_usd', 20);
-        $allowedDays = Setting::get('withdrawal_allowed_days', [3, 4, 5]);
+        $allowedDays = Setting::get('withdrawal_allowed_days', [0, 1, 2, 3, 4, 5, 6]);
         $feePercent = (float) Setting::get('withdrawal_fee_percent', 2);
         $todayDubai = (int) Carbon::now('Asia/Dubai')->format('N');
 
         if (! (is_array($allowedDays) && in_array($todayDubai, $allowedDays, true))) {
-            return back()->withErrors(['amount' => 'Withdrawals are only allowed on Wednesday, Thursday and Friday (Dubai time).']);
+            return back()->withErrors(['amount' => 'Withdrawals are not allowed on this day (Dubai time). Check allowed days in settings.']);
+        }
+
+        $kycRequiredForWithdrawal = (bool) Setting::get('kyc_required_for_withdrawal', false);
+        if ($kycRequiredForWithdrawal && ! $user->kycDocuments()->where('status', 'approved')->exists()) {
+            return back()->withErrors(['amount' => 'KYC approval is required before you can withdraw. Please complete and get your KYC approved first.']);
         }
 
         $validated = $request->validate([

@@ -22,8 +22,8 @@ export default function AdminUserPackageControlsShow({ member, ledgerTotal }) {
                     <h3 className="font-semibold mb-2">Activate Access Package (Leader)</h3>
                     <form onSubmit={(e) => { e.preventDefault(); accessForm.post(`${baseUrl}/activate-access-package`); }} className="space-y-2">
                         <select value={accessForm.data.leg} onChange={(e) => accessForm.setData('leg', e.target.value)} className="rounded border px-3 py-2 w-full">
-                            <option value="left">Left leg (1M points)</option>
-                            <option value="right">Right leg (1M points)</option>
+                            <option value="left">Left leg (1M USDT volume)</option>
+                            <option value="right">Right leg (1M USDT volume)</option>
                         </select>
                         <input type="number" step="0.01" placeholder="Cap multiplier (default 4)" value={accessForm.data.cap_multiplier} onChange={(e) => accessForm.setData('cap_multiplier', e.target.value)} className="block w-full rounded border px-3 py-2" />
                         <button type="submit" className="px-4 py-2 bg-teal-600 text-white rounded-lg">Activate Access Package</button>

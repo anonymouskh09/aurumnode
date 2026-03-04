@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Dashboard;
 use App\Http\Controllers\Controller;
 use App\Models\Package;
 use App\Services\PackagePurchaseService;
+use App\Services\WalletService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -13,10 +14,11 @@ use Inertia\Response;
 class PackageController extends Controller
 {
     public function __construct(
-        private PackagePurchaseService $packagePurchaseService
+        private PackagePurchaseService $packagePurchaseService,
+        private WalletService $walletService
     ) {}
 
-    public function index(): Response
+    public function index(Request $request): Response
     {
         $packages = Package::where('status', 'active')
             ->where('is_admin_only', false)
@@ -25,13 +27,17 @@ class PackageController extends Controller
             ->get()
             ->map(fn ($p) => array_merge($p->toArray(), ['display_name' => $p->getDisplayName()]));
 
+        $wallet = $this->walletService->getOrCreateWallet($request->user());
+        $depositBalance = (float) $wallet->deposit_wallet;
+
         return Inertia::render('Dashboard/Packages', [
             'packages' => $packages,
+            'deposit_balance_usdt' => round($depositBalance, 2),
         ]);
     }
 
     /**
-     * Buy package (simulation only - no payment gateway).
+     * Buy package. Payment is deducted from Deposit Wallet (USDT), including funds transferred from other users.
      */
     public function buy(Request $request): RedirectResponse
     {

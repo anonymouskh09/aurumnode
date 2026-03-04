@@ -12,11 +12,22 @@ const EARNINGS_WALLETS = [
     { key: 'rank_award_wallet', label: 'Rank Award' },
 ];
 
-export default function Transfers({ wallet }) {
-    const transferToWithdrawal = useForm({ amount: '', from: 'direct_bonus_wallet' });
-    const transferToUser = useForm({ amount: '', to_username: '', from: 'direct_bonus_wallet' });
+const TRANSFER_TO_WITHDRAWAL_WALLETS = [
+    { key: 'deposit_wallet', label: 'Deposit Wallet (USDT)' },
+    ...EARNINGS_WALLETS,
+];
 
-    const wallets = EARNINGS_WALLETS;
+const TRANSFER_TO_USER_WALLETS = [
+    { key: 'deposit_wallet', label: 'Deposit Wallet (USDT)' },
+    ...EARNINGS_WALLETS,
+];
+
+export default function Transfers({ wallet }) {
+    const transferToWithdrawal = useForm({ amount: '', from: 'deposit_wallet' });
+    const transferToUser = useForm({ amount: '', to_username: '', from: 'deposit_wallet' });
+
+    const transferToWithdrawalWallets = TRANSFER_TO_WITHDRAWAL_WALLETS;
+    const transferToUserWallets = TRANSFER_TO_USER_WALLETS;
 
     const getBalance = (key) => parseFloat(wallet?.[key] ?? 0).toFixed(2);
 
@@ -37,7 +48,7 @@ export default function Transfers({ wallet }) {
                     </Card>
                 )}
                 <Card>
-                    <CardHeader title="Transfer to withdrawal wallet" subtitle="Move funds to your withdrawal wallet" />
+                    <CardHeader title="Transfer to withdrawal wallet (USDT)" subtitle="Move earnings to your withdrawal wallet to request payout" />
                     <CardBody>
                         <form
                             onSubmit={(e) => {
@@ -53,7 +64,7 @@ export default function Transfers({ wallet }) {
                                     onChange={(e) => transferToWithdrawal.setData('from', e.target.value)}
                                     className={inputClass}
                                 >
-                                    {wallets.map((w) => (
+                                    {transferToWithdrawalWallets.map((w) => (
                                         <option key={w.key} value={w.key}>
                                             {w.label} (${getBalance(w.key)})
                                         </option>
@@ -61,7 +72,7 @@ export default function Transfers({ wallet }) {
                                 </select>
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-1">Amount</label>
+                                <label className="block text-sm font-medium text-slate-700 mb-1">Amount (USDT)</label>
                                 <input
                                     type="number"
                                     step="0.01"
@@ -79,7 +90,7 @@ export default function Transfers({ wallet }) {
                 </Card>
 
                 <Card>
-                    <CardHeader title="Transfer to another user" subtitle="Send funds by username" />
+                    <CardHeader title="Transfer to another user (USDT)" subtitle="Send USDT by username. Recipient can use it in Deposit Wallet to buy packages." />
                     <CardBody>
                         <form
                             onSubmit={(e) => {
@@ -105,7 +116,7 @@ export default function Transfers({ wallet }) {
                                     onChange={(e) => transferToUser.setData('from', e.target.value)}
                                     className={inputClass}
                                 >
-                                    {wallets.map((w) => (
+                                    {transferToUserWallets.map((w) => (
                                         <option key={w.key} value={w.key}>
                                             {w.label} (${getBalance(w.key)})
                                         </option>
@@ -113,7 +124,7 @@ export default function Transfers({ wallet }) {
                                 </select>
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-1">Amount</label>
+                                <label className="block text-sm font-medium text-slate-700 mb-1">Amount (USDT)</label>
                                 <input
                                     type="number"
                                     step="0.01"

@@ -47,8 +47,8 @@ function TreeNode({ node, level = 0 }) {
                     {displayName}
                 </span>
                 <div className="flex justify-center gap-3 mt-1.5 text-xs text-slate-500">
-                    <span title="Left points">L: {(node.left_points ?? 0).toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
-                    <span title="Right points">R: {(node.right_points ?? 0).toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
+                    <span title="Left volume (USDT)">L: ${(node.left_points ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                    <span title="Right volume (USDT)">R: ${(node.right_points ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                 </div>
             </div>
             {(node.left || node.right) && (
@@ -125,9 +125,9 @@ export default function BinaryTree({ tree, leftTotal, rightTotal, maxDepth = 0, 
                             <ChevronLeft className="w-7 h-7" strokeWidth={2.5} />
                         </div>
                         <div className="min-w-0">
-                            <p className="text-sm font-medium text-slate-500">Left leg total</p>
+                            <p className="text-sm font-medium text-slate-500">Left leg total (USDT)</p>
                             <p className="text-2xl font-bold text-slate-900 mt-0.5">
-                                {(leftTotal ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} pts
+                                ${(leftTotal ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                             </p>
                         </div>
                     </CardBody>
@@ -138,9 +138,9 @@ export default function BinaryTree({ tree, leftTotal, rightTotal, maxDepth = 0, 
                             <ChevronRight className="w-7 h-7" strokeWidth={2.5} />
                         </div>
                         <div className="min-w-0">
-                            <p className="text-sm font-medium text-slate-500">Right leg total</p>
+                            <p className="text-sm font-medium text-slate-500">Right leg total (USDT)</p>
                             <p className="text-2xl font-bold text-slate-900 mt-0.5">
-                                {(rightTotal ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} pts
+                                ${(rightTotal ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                             </p>
                         </div>
                     </CardBody>

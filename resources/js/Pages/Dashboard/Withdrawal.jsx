@@ -1,9 +1,19 @@
-import { useForm } from '@inertiajs/react';
+import { useForm, Link } from '@inertiajs/react';
 import DashboardLayout from '@/Components/DashboardLayout';
 import { Card, CardHeader, CardBody, Button, Badge } from '@/Components/ui';
 import { Table, TableHeader, TableBody, TableRow, Th, Td, TableEmpty } from '@/Components/ui';
 
-export default function Withdrawal({ wallet, withdrawals, withdrawal_min_usd, withdrawal_fee_percent, withdrawal_allowed_today, errors: serverErrors }) {
+export default function Withdrawal({
+    wallet,
+    withdrawals,
+    withdrawal_min_usd,
+    withdrawal_fee_percent,
+    withdrawal_allowed_today,
+    kyc_required_for_withdrawal,
+    has_kyc_approved,
+    show_kyc_required_notice,
+    errors: serverErrors,
+}) {
     const { data, setData, post, processing, errors } = useForm({
         amount: '',
         transaction_password: '',
@@ -14,6 +24,7 @@ export default function Withdrawal({ wallet, withdrawals, withdrawal_min_usd, wi
     const minUsd = parseFloat(withdrawal_min_usd ?? 20);
     const feePercent = parseFloat(withdrawal_fee_percent ?? 2);
     const allowedToday = withdrawal_allowed_today !== false;
+    const canWithdraw = allowedToday && (!kyc_required_for_withdrawal || has_kyc_approved);
 
     return (
         <DashboardLayout title="Withdrawal">
@@ -21,16 +32,25 @@ export default function Withdrawal({ wallet, withdrawals, withdrawal_min_usd, wi
                 <Card className="bg-teal-50/50 border-teal-200">
                     <CardBody>
                         <p className="text-sm text-slate-600">
-                            Available for withdrawal: <strong className="text-teal-700">${available.toFixed(2)}</strong>
+                            Available for withdrawal (USDT): <strong className="text-teal-700">${available.toFixed(2)}</strong>
                         </p>
-                        <p className="text-sm text-slate-500 mt-1">Minimum ${minUsd}. {feePercent}% fee for company withdrawals. Allowed only Wed–Fri (Dubai time).</p>
+                        <p className="text-sm text-slate-500 mt-1">Minimum ${minUsd} USDT. {feePercent}% fee for company withdrawals. Withdrawal is available any time (admin may restrict days).</p>
                     </CardBody>
                 </Card>
+
+                {show_kyc_required_notice && (
+                    <Card className="bg-amber-50 border-amber-200">
+                        <CardBody>
+                            <p className="text-amber-800 font-medium">Withdrawal se pehle apna KYC approve karwao. Admin ne withdraw ke liye KYC mandatory kar rakha hai. Please go to Profile → KYC documents, upload your documents and wait for approval.</p>
+                            <Link href="/dashboard/profile" className="inline-block mt-2 text-teal-600 font-medium hover:underline">Go to Profile & KYC →</Link>
+                        </CardBody>
+                    </Card>
+                )}
 
                 {!allowedToday && (
                     <Card className="bg-amber-50 border-amber-200">
                         <CardBody>
-                            <p className="text-amber-800 font-medium">Withdrawals are only allowed on Wednesday, Thursday and Friday (Dubai time). Please try again on an allowed day.</p>
+                            <p className="text-amber-800 font-medium">Withdrawals are not allowed on this day (Dubai time). Please try again on an allowed day.</p>
                         </CardBody>
                     </Card>
                 )}
@@ -53,7 +73,7 @@ export default function Withdrawal({ wallet, withdrawals, withdrawal_min_usd, wi
                                     min={minUsd}
                                     value={data.amount}
                                     onChange={(e) => setData('amount', e.target.value)}
-                                    disabled={!allowedToday}
+                                    disabled={!canWithdraw}
                                     className="block w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm focus:border-teal-500 focus:ring-1 focus:ring-teal-500 disabled:opacity-60"
                                 />
                                 {feePercent > 0 && <p className="text-xs text-slate-500 mt-1">Fee: {feePercent}% (${(parseFloat(data.amount || 0) * feePercent / 100).toFixed(2)} will be deducted)</p>}
@@ -69,7 +89,7 @@ export default function Withdrawal({ wallet, withdrawals, withdrawal_min_usd, wi
                                 />
                                 {err('transaction_password') && <p className="text-sm text-red-600 mt-1">{err('transaction_password')}</p>}
                             </div>
-                            <Button type="submit" variant="primary" disabled={processing || !allowedToday}>
+                            <Button type="submit" variant="primary" disabled={processing || !canWithdraw}>
                                 Submit request
                             </Button>
                         </form>

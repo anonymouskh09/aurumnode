@@ -35,8 +35,8 @@ class WalletService
         );
     }
 
-    /** Columns that are LOCKED (investment) - cannot be used as transfer source. */
-    public const LOCKED_SOURCES = ['investment_wallet', 'deposit_wallet'];
+    /** Only investment is locked; deposit_wallet can be used to transfer to other users or buy packages. */
+    public const LOCKED_SOURCES = ['investment_wallet'];
 
     /**
      * Transfer from one wallet column to another for same user.
@@ -177,6 +177,25 @@ class WalletService
 
         $wallet = $this->getOrCreateWallet($user);
         $wallet->investment_wallet = (float) ($wallet->investment_wallet ?? 0) + $amount;
+        $wallet->save();
+    }
+
+    /**
+     * Deduct from deposit_wallet (e.g. for package purchase). Caller must ensure balance >= amount.
+     */
+    public function deductFromDeposit(User $user, float $amount): void
+    {
+        if ($amount <= 0) {
+            throw new \InvalidArgumentException('Amount must be positive');
+        }
+
+        $wallet = $this->getOrCreateWallet($user);
+        $balance = (float) $wallet->deposit_wallet;
+        if ($balance < $amount) {
+            throw new \RuntimeException('Insufficient deposit balance. You need $'.number_format($amount, 2).' USDT in your Deposit Wallet. Transferred funds from other users go to your Deposit Wallet and can be used to buy packages.');
+        }
+
+        $wallet->deposit_wallet = $balance - $amount;
         $wallet->save();
     }
 }
