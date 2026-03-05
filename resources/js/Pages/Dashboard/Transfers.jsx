@@ -17,17 +17,11 @@ const TRANSFER_TO_WITHDRAWAL_WALLETS = [
     ...EARNINGS_WALLETS,
 ];
 
-const TRANSFER_TO_USER_WALLETS = [
-    { key: 'deposit_wallet', label: 'Deposit Wallet (USDT)' },
-    ...EARNINGS_WALLETS,
-];
-
 export default function Transfers({ wallet }) {
     const transferToWithdrawal = useForm({ amount: '', from: 'deposit_wallet' });
-    const transferToUser = useForm({ amount: '', to_username: '', from: 'deposit_wallet' });
+    const transferToUser = useForm({ amount: '', to_username: '' });
 
     const transferToWithdrawalWallets = TRANSFER_TO_WITHDRAWAL_WALLETS;
-    const transferToUserWallets = TRANSFER_TO_USER_WALLETS;
 
     const getBalance = (key) => parseFloat(wallet?.[key] ?? 0).toFixed(2);
 
@@ -90,8 +84,9 @@ export default function Transfers({ wallet }) {
                 </Card>
 
                 <Card>
-                    <CardHeader title="Transfer to another user (USDT)" subtitle="Send USDT by username. Recipient can use it in Deposit Wallet to buy packages." />
+                    <CardHeader title="Transfer to another user (USDT)" subtitle="Only from Withdrawal Wallet. Recipient receives in Deposit Wallet." />
                     <CardBody>
+                        <p className="text-sm text-slate-600 mb-4">Available: <strong>${getBalance('withdrawal_wallet')}</strong> (Withdrawal Wallet)</p>
                         <form
                             onSubmit={(e) => {
                                 e.preventDefault();
@@ -108,20 +103,6 @@ export default function Transfers({ wallet }) {
                                     placeholder="username"
                                     className={inputClass}
                                 />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-1">From wallet</label>
-                                <select
-                                    value={transferToUser.data.from}
-                                    onChange={(e) => transferToUser.setData('from', e.target.value)}
-                                    className={inputClass}
-                                >
-                                    {transferToUserWallets.map((w) => (
-                                        <option key={w.key} value={w.key}>
-                                            {w.label} (${getBalance(w.key)})
-                                        </option>
-                                    ))}
-                                </select>
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-slate-700 mb-1">Amount (USDT)</label>

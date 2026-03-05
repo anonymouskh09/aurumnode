@@ -25,19 +25,38 @@ class DashboardController extends Controller
         $totalInvestment = $user->userPackages()->sum('invested_amount');
         $totalVolumeUsdt = (float) $user->left_points_total + (float) $user->right_points_total;
 
-        $activeUserPackage = $user->activeUserPackage;
-        $activePackageCard = null;
-        if ($activeUserPackage) {
-            $activeUserPackage->load('package');
-            $pkg = $activeUserPackage->package;
-            $cap = $this->earningsService->getPackageCap($activeUserPackage);
-            $totalEarnings = $this->earningsService->getTotalEarningsForPackage($activeUserPackage->id);
-            $activePackageCard = [
-                'display_name' => $pkg ? $pkg->getDisplayName() : $activeUserPackage->package->name ?? '—',
-                'price' => (float) $activeUserPackage->invested_amount,
-                'status' => $activeUserPackage->status,
+        // All user packages with cap and earnings (for ROI / cap display)
+        $userPackages = $user->userPackages()->with('package')->orderByDesc('activated_at')->get();
+        $packageCards = [];
+        $totalCap = 0.0;
+        $totalEarningsFromPackages = 0.0;
+        foreach ($userPackages as $up) {
+            $pkg = $up->package;
+            $cap = $this->earningsService->getPackageCap($up);
+            $earnings = $this->earningsService->getTotalEarningsForPackage($up->id);
+            $totalCap += $cap;
+            $totalEarningsFromPackages += $earnings;
+            $packageCards[] = [
+                'id' => $up->id,
+                'display_name' => $pkg ? $pkg->getDisplayName() : $up->package->name ?? '—',
+                'price' => (float) $up->invested_amount,
+                'status' => $up->status,
                 'cap' => round($cap, 2),
-                'total_earnings' => round($totalEarnings, 2),
+                'total_earnings' => round($earnings, 2),
+                'is_active' => (int) $user->active_package_id === (int) $up->id,
+            ];
+        }
+
+        // Keep first active package for backward compatibility (single card summary)
+        $activePackageCard = null;
+        if ($packageCards !== []) {
+            $firstActive = collect($packageCards)->firstWhere('is_active', true) ?? $packageCards[0];
+            $activePackageCard = [
+                'display_name' => $firstActive['display_name'],
+                'price' => $firstActive['price'],
+                'status' => $firstActive['status'],
+                'cap' => $firstActive['cap'],
+                'total_earnings' => $firstActive['total_earnings'],
             ];
         }
 
@@ -56,6 +75,9 @@ class DashboardController extends Controller
             'totalInvestment' => number_format((float) $totalInvestment, 2, '.', ''),
             'totalVolumeUsdt' => round($totalVolumeUsdt, 2),
             'activePackageCard' => $activePackageCard,
+            'packageCards' => $packageCards,
+            'totalCap' => round($totalCap, 2),
+            'totalEarningsFromPackages' => round($totalEarningsFromPackages, 2),
             'investmentBalance' => round($investmentBalance, 2),
             'earningsBalance' => round($earningsBalance, 2),
         ]);

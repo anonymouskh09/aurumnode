@@ -51,7 +51,6 @@ class TransferController extends Controller
     {
         $validated = $request->validate([
             'to_username' => ['required', 'string'],
-            'from' => ['required', 'in:deposit_wallet,direct_bonus_wallet,binary_bonus_wallet,roi_wallet,rank_award_wallet'],
             'amount' => ['required', 'numeric', 'min:0.01'],
         ]);
 
@@ -59,7 +58,7 @@ class TransferController extends Controller
             $this->walletService->transferToUser(
                 $request->user(),
                 $validated['to_username'],
-                $validated['from'],
+                'withdrawal_wallet',
                 'deposit_wallet',
                 (float) $validated['amount']
             );

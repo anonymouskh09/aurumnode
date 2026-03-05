@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Link } from '@inertiajs/react';
 import DashboardLayout from '@/Components/DashboardLayout';
 import {
@@ -16,6 +17,8 @@ import {
     DollarSign,
     PiggyBank,
     Lock,
+    ChevronDown,
+    ChevronUp,
 } from 'lucide-react';
 
 const walletIcons = {
@@ -33,13 +36,16 @@ export default function DashboardIndex({
     totalInvestment,
     totalVolumeUsdt,
     activePackageCard,
+    packageCards = [],
+    totalCap = 0,
+    totalEarningsFromPackages = 0,
     investmentBalance,
     earningsBalance,
 }) {
     const totalEarned = parseFloat(wallet?.total_bonus ?? 0) + parseFloat(wallet?.total_roi ?? 0);
     const inv = parseFloat(totalInvestment ?? 0);
-    const cap = activePackageCard?.cap ?? 0;
-    const totalEarningsFromCap = activePackageCard?.total_earnings ?? 0;
+    const cap = (totalCap || activePackageCard?.cap) ?? 0;
+    const totalEarningsFromCap = (totalEarningsFromPackages ?? activePackageCard?.total_earnings) ?? 0;
     const maxEarning = cap > 0 ? cap : inv * 4;
     const remaining = Math.max(0, maxEarning - (cap > 0 ? totalEarningsFromCap : totalEarned));
 
@@ -55,9 +61,11 @@ export default function DashboardIndex({
     const stats = [
         { label: 'Total volume (USDT)', value: `$${Number(totalVolumeUsdt ?? 0).toFixed(2)}`, icon: TrendingUp },
         { label: 'Earnings balance (USDT)', value: `$${Number(earningsBalance ?? 0).toFixed(2)}`, icon: PiggyBank },
-        { label: 'Earned (cap)', value: `$${totalEarningsFromCap.toFixed(2)}`, icon: DollarSign },
+        { label: 'Earned (all packages)', value: `$${Number(totalEarningsFromCap).toFixed(2)}`, icon: DollarSign },
         { label: 'Remaining to cap', value: `$${remaining.toFixed(2)}`, icon: Wallet },
     ];
+
+    const [showActivePackages, setShowActivePackages] = useState(false);
 
     return (
         <DashboardLayout title="Dashboard">
@@ -108,30 +116,54 @@ export default function DashboardIndex({
                     </div>
                 </section>
 
-                {/* Active Package Card */}
-                {activePackageCard && (
+                {/* Active packages dropdown – click to show list */}
+                {packageCards.length > 0 && (
                     <section>
-                        <h2 className="text-lg font-semibold text-slate-900 mb-4">Active Package</h2>
-                        <Card>
-                            <CardBody>
-                                <div className="flex flex-wrap items-center justify-between gap-4">
-                                    <div>
-                                        <p className="text-sm text-slate-500">Active Package</p>
-                                        <p className="text-xl font-bold text-slate-900">{activePackageCard.display_name} (${Number(activePackageCard.price).toFixed(2)})</p>
-                                        <p className="mt-1">
-                                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-800">
-                                                Status: {activePackageCard.status}
-                                            </span>
+                        <button
+                            type="button"
+                            onClick={() => setShowActivePackages((v) => !v)}
+                            className="w-full flex items-center justify-between gap-2 rounded-xl border-2 border-slate-200 bg-white px-4 py-3 text-left hover:border-teal-300 hover:bg-slate-50 transition-colors"
+                        >
+                            <span className="text-lg font-semibold text-slate-900">Active packages ({packageCards.length})</span>
+                            {showActivePackages ? <ChevronUp className="w-5 h-5 text-slate-500 shrink-0" /> : <ChevronDown className="w-5 h-5 text-slate-500 shrink-0" />}
+                        </button>
+                        {showActivePackages && (
+                            <div className="mt-4 space-y-4">
+                                {packageCards.map((p) => (
+                                    <Card key={p.id} className={p.is_active ? 'border-2 border-teal-300 bg-teal-50/30' : ''}>
+                                        <CardBody>
+                                            <div className="flex flex-wrap items-center justify-between gap-4">
+                                                <div>
+                                                    <p className="text-sm text-slate-500">
+                                                        {p.display_name} (${Number(p.price).toFixed(2)})
+                                                        {p.is_active && <span className="ml-2 text-teal-600 font-medium">• Active</span>}
+                                                    </p>
+                                                    <p className="mt-1">
+                                                        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-800">
+                                                            Status: {p.status}
+                                                        </span>
+                                                    </p>
+                                                </div>
+                                                <div className="min-w-[200px]">
+                                                    <p className="text-sm text-slate-500 mb-1">Cap progress (4X)</p>
+                                                    <p className="text-lg font-semibold">${Number(p.total_earnings).toFixed(2)} / ${Number(p.cap).toFixed(2)}</p>
+                                                    <ProgressBar value={p.total_earnings} max={p.cap || 1} showLabel className="mt-2" />
+                                                </div>
+                                            </div>
+                                        </CardBody>
+                                    </Card>
+                                ))}
+                                <Card className="bg-slate-50 border-slate-200">
+                                    <CardBody>
+                                        <p className="text-sm text-slate-600 mb-1">Total (all packages)</p>
+                                        <p className="text-xl font-bold text-slate-900">
+                                            Earned: ${Number(totalEarningsFromCap).toFixed(2)} / Cap: ${Number(cap).toFixed(2)} • Remaining: ${remaining.toFixed(2)}
                                         </p>
-                                    </div>
-                                    <div className="min-w-[200px]">
-                                        <p className="text-sm text-slate-500 mb-1">Cap progress</p>
-                                        <p className="text-lg font-semibold">${Number(activePackageCard.total_earnings).toFixed(2)} / ${Number(activePackageCard.cap).toFixed(2)}</p>
-                                        <ProgressBar value={activePackageCard.total_earnings} max={activePackageCard.cap || 1} showLabel className="mt-2" />
-                                    </div>
-                                </div>
-                            </CardBody>
-                        </Card>
+                                        <ProgressBar value={totalEarningsFromCap} max={cap || 1} showLabel className="mt-2" />
+                                    </CardBody>
+                                </Card>
+                            </div>
+                        )}
                     </section>
                 )}
 
@@ -164,10 +196,10 @@ export default function DashboardIndex({
                             <StatCard key={label} label={label} value={value} icon={Icon} />
                         ))}
                     </div>
-                    {activePackageCard && activePackageCard.cap > 0 && (
+                    {packageCards.length > 0 && cap > 0 && (
                         <div className="mt-3">
-                            <p className="text-sm text-slate-500 mb-2">Cap progress (4X)</p>
-                            <ProgressBar value={totalEarningsFromCap} max={activePackageCard.cap || 1} showLabel />
+                            <p className="text-sm text-slate-500 mb-2">Total cap progress (all packages, 4X)</p>
+                            <ProgressBar value={totalEarningsFromCap} max={cap || 1} showLabel />
                         </div>
                     )}
                 </section>
