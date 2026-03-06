@@ -99,6 +99,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::post('/volume/add', [\App\Http\Controllers\Admin\VolumeController::class, 'add'])->name('volume.add');
     Route::get('/earnings-ledger', [\App\Http\Controllers\Admin\EarningsLedgerController::class, 'index'])->name('earnings-ledger.index');
     Route::get('/payout-runs', [\App\Http\Controllers\Admin\PayoutRunsController::class, 'index'])->name('payout-runs.index');
+    Route::post('/payout-runs/run-binary', [\App\Http\Controllers\Admin\PayoutRunsController::class, 'runBinary'])->name('payout-runs.run-binary');
+    Route::post('/payout-runs/run-roi', [\App\Http\Controllers\Admin\PayoutRunsController::class, 'runRoi'])->name('payout-runs.run-roi');
     Route::get('/audit-logs', [\App\Http\Controllers\Admin\AuditLogsController::class, 'index'])->name('audit-logs.index');
     Route::get('/top', [\App\Http\Controllers\Admin\TopController::class, 'index'])->name('top');
 });

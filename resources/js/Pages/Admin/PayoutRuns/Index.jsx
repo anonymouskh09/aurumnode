@@ -1,14 +1,30 @@
-import { router } from '@inertiajs/react';
+import { router, usePage } from '@inertiajs/react';
 import AdminLayout from '@/Components/AdminLayout';
 
 export default function AdminPayoutRunsIndex({ runs, filters }) {
+    const { props } = usePage();
+    const status = props.flash?.status;
+
     const applyFilters = (e) => {
         e.preventDefault();
         const f = e.target;
         router.get('/admin/payout-runs', { run_type: f.run_type?.value || undefined, status: f.status?.value || undefined });
     };
+
+    const runBinary = () => router.post('/admin/payout-runs/run-binary');
+    const runRoi = () => router.post('/admin/payout-runs/run-roi');
+
     return (
         <AdminLayout title="Payout Runs">
+            <div className="mb-4 flex flex-wrap items-center gap-3">
+                <button type="button" onClick={runBinary} className="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700">
+                    Run Binary Payout (yesterday)
+                </button>
+                <button type="button" onClick={runRoi} className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">
+                    Run ROI Payout (previous week)
+                </button>
+                {status && <span className="text-slate-600 font-medium">{status}</span>}
+            </div>
             <form onSubmit={applyFilters} className="mb-4 flex gap-2">
                 <select name="run_type" defaultValue={filters?.run_type} className="rounded border px-3 py-2">
                     <option value="">All types</option>
