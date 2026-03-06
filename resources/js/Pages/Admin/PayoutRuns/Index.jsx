@@ -18,7 +18,7 @@ export default function AdminPayoutRunsIndex({ runs, filters }) {
         <AdminLayout title="Payout Runs">
             <div className="mb-4 flex flex-wrap items-center gap-3">
                 <button type="button" onClick={runBinary} className="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700">
-                    Run Binary Payout (yesterday)
+                    Run Binary Payout (today)
                 </button>
                 <button type="button" onClick={runRoi} className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">
                     Run ROI Payout (previous week)

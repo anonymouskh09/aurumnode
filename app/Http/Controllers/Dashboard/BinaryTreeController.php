@@ -29,7 +29,7 @@ class BinaryTreeController extends Controller
             'rightTotal' => (float) $user->right_points_total,
             'maxDepth' => $actualMaxDepth,
             'requestedDepth' => $depth,
-            'hasMore' => $actualMaxDepth >= $depth && ($user->left_child_id || $user->right_child_id),
+            'hasMore' => $actualMaxDepth >= $depth && (($user->left_child_id || $user->right_child_id) || User::where('binary_parent_id', $user->id)->exists()),
         ]);
     }
 
@@ -51,18 +51,20 @@ class BinaryTreeController extends Controller
             return $node;
         }
 
-        if ($user->left_child_id) {
-            $leftChild = User::find($user->left_child_id);
-            if ($leftChild) {
-                $node['left'] = $this->buildTree($leftChild, $depth + 1, $maxDepth);
-            }
+        $leftChild = $user->left_child_id ? User::find($user->left_child_id) : null;
+        if (! $leftChild) {
+            $leftChild = User::where('binary_parent_id', $user->id)->where('placement_side', 'left')->first();
+        }
+        if ($leftChild) {
+            $node['left'] = $this->buildTree($leftChild, $depth + 1, $maxDepth);
         }
 
-        if ($user->right_child_id) {
-            $rightChild = User::find($user->right_child_id);
-            if ($rightChild) {
-                $node['right'] = $this->buildTree($rightChild, $depth + 1, $maxDepth);
-            }
+        $rightChild = $user->right_child_id ? User::find($user->right_child_id) : null;
+        if (! $rightChild) {
+            $rightChild = User::where('binary_parent_id', $user->id)->where('placement_side', 'right')->first();
+        }
+        if ($rightChild) {
+            $node['right'] = $this->buildTree($rightChild, $depth + 1, $maxDepth);
         }
 
         return $node;

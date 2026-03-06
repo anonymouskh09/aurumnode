@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\BinaryBonusLog;
 use App\Models\EarningsLedger;
 use App\Models\PayoutRun;
 use App\Models\User;
@@ -134,6 +135,18 @@ class BinaryPayoutService
         );
 
         if ($credited > 0) {
+            BinaryBonusLog::create([
+                'user_id' => $user->id,
+                'date' => $periodKey,
+                'left_points' => $leftVolume,
+                'right_points' => $rightVolume,
+                'lesser_points' => $lesser,
+                'percent_used' => $percent,
+                'payout_amount' => $credited,
+                'carried_left' => $leftVolume - $lesser,
+                'carried_right' => $rightVolume - $lesser,
+                'status' => 'paid',
+            ]);
             $user->refresh();
             $leftCarryNew = $leftVolume - $lesser;
             $rightCarryNew = $rightVolume - $lesser;
