@@ -110,12 +110,23 @@ class BinaryPayoutService
         $rightCarry = (float) $user->right_carry_total;
         $leftLog = $log ? (float) $log->left_points : 0;
         $rightLog = $log ? (float) $log->right_points : 0;
+        $leftPointsTotal = (float) $user->left_points_total;
+        $rightPointsTotal = (float) $user->right_points_total;
 
-        $leftVolume = $leftCarry + $leftLog;
-        $rightVolume = $rightCarry + $rightLog;
+        // Keep payout math aligned with dashboard totals. This covers legacy data where
+        // points_total existed before carry columns were introduced.
+        $leftVolume = max($leftCarry + $leftLog, $leftPointsTotal);
+        $rightVolume = max($rightCarry + $rightLog, $rightPointsTotal);
         $lesser = min($leftVolume, $rightVolume);
 
         if ($lesser <= 0) {
+            // Persist one-sided daily volume into carry so it can match on future days.
+            if ($leftLog > 0 || $rightLog > 0) {
+                $user->update([
+                    'left_carry_total' => $leftVolume,
+                    'right_carry_total' => $rightVolume,
+                ]);
+            }
             return;
         }
 
