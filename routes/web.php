@@ -49,6 +49,7 @@ Route::middleware(['auth', 'user.only'])->prefix('dashboard')->name('dashboard.'
     Route::get('/', DashboardController::class)->name('index');
     Route::get('/packages', [PackageController::class, 'index'])->name('packages');
     Route::post('/packages/buy', [PackageController::class, 'buy'])->name('packages.buy');
+    Route::post('/packages/demo-deposit', [PackageController::class, 'demoDeposit'])->name('packages.demo-deposit');
     Route::get('/profile', [ProfileController::class, 'index'])->name('profile');
     Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::post('/profile/transaction-password', [ProfileController::class, 'transactionPassword'])->name('profile.transaction-password');

@@ -198,4 +198,23 @@ class WalletService
         $wallet->deposit_wallet = $balance - $amount;
         $wallet->save();
     }
+
+    /**
+     * Deduct from withdrawal_wallet (e.g. for package purchase). Caller must ensure balance >= amount.
+     */
+    public function deductFromWithdrawal(User $user, float $amount): void
+    {
+        if ($amount <= 0) {
+            throw new \InvalidArgumentException('Amount must be positive');
+        }
+
+        $wallet = $this->getOrCreateWallet($user);
+        $balance = (float) $wallet->withdrawal_wallet;
+        if ($balance < $amount) {
+            throw new \RuntimeException('Insufficient withdrawal balance. You need $'.number_format($amount, 2).' USDT in your Withdrawal Wallet.');
+        }
+
+        $wallet->withdrawal_wallet = $balance - $amount;
+        $wallet->save();
+    }
 }

@@ -20,14 +20,24 @@ class PackagePurchaseService
         private DirectBonusService $directBonusService
     ) {}
 
-    public function purchase(User $user, Package $package): void
+    /**
+     * @param  'deposit_wallet'|'withdrawal_wallet'  $payFrom
+     */
+    public function purchase(User $user, Package $package, string $payFrom = 'deposit_wallet'): void
     {
         $amount = (float) $package->price_usd;
         $isLeader = (bool) $package->is_leader;
 
-        DB::transaction(function () use ($user, $package, $amount, $isLeader) {
-            // Deduct from deposit_wallet (USDT) so transferred funds can be used for packages
-            $this->walletService->deductFromDeposit($user, $amount);
+        if (! in_array($payFrom, ['deposit_wallet', 'withdrawal_wallet'], true)) {
+            $payFrom = 'deposit_wallet';
+        }
+
+        DB::transaction(function () use ($user, $package, $amount, $isLeader, $payFrom) {
+            if ($payFrom === 'withdrawal_wallet') {
+                $this->walletService->deductFromWithdrawal($user, $amount);
+            } else {
+                $this->walletService->deductFromDeposit($user, $amount);
+            }
 
             $capMultiplier = 4;
             $maxCap = round($amount * $capMultiplier, 2);
