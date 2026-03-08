@@ -1,16 +1,12 @@
-import { useRef, useState, useCallback } from 'react';
+import { useState } from 'react';
 import { router } from '@inertiajs/react';
 import DashboardLayout from '@/Components/DashboardLayout';
 import { Card, CardHeader, CardBody } from '@/Components/ui';
-import { ChevronLeft, ChevronRight, ZoomIn, ZoomOut, Maximize2, Move, Loader2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 
 const DEEP_TREE_THRESHOLD = 10;
 const BASE_VERTICAL_GAP = 36;
 const VERTICAL_GAP_PER_LEVEL = 28;
-const MIN_ZOOM = 0.25;
-const MAX_ZOOM = 2;
-const ZOOM_STEP = 0.07;
-const TRANSITION_MS = 200;
 
 function verticalGap(level) {
     return BASE_VERTICAL_GAP + Math.min(level * VERTICAL_GAP_PER_LEVEL, 100);
@@ -69,51 +65,25 @@ function TreeNode({ node, level = 0 }) {
     );
 }
 
-export default function BinaryTree({ tree, leftTotal, rightTotal, maxDepth = 0, requestedDepth = 8, hasMore = false }) {
-    const containerRef = useRef(null);
-    const [scale, setScale] = useState(1);
-    const [translate, setTranslate] = useState({ x: 0, y: 0 });
-    const [isPanning, setIsPanning] = useState(false);
+export default function BinaryTree({ tree, leftTotal, rightTotal, maxDepth = 0, requestedDepth = 8, hasMore = false, binaryUnlock = null }) {
     const [loadingMore, setLoadingMore] = useState(false);
-    const panStart = useRef({ x: 0, y: 0, tx: 0, ty: 0 });
-
-    const handleWheel = useCallback((e) => {
-        if (!containerRef.current) return;
-        e.preventDefault();
-        const delta = e.deltaY > 0 ? -ZOOM_STEP : ZOOM_STEP;
-        setScale((s) => Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, s + delta)));
-    }, []);
-
-    const handleMouseDown = useCallback((e) => {
-        if (e.button !== 0) return;
-        setIsPanning(true);
-        panStart.current = { x: e.clientX, y: e.clientY, tx: translate.x, ty: translate.y };
-    }, [translate]);
-
-    const handleMouseMove = useCallback((e) => {
-        if (!isPanning) return;
-        setTranslate({
-            x: panStart.current.tx + (e.clientX - panStart.current.x),
-            y: panStart.current.ty + (e.clientY - panStart.current.y),
-        });
-    }, [isPanning]);
-
-    const handleMouseUp = useCallback(() => setIsPanning(false), []);
-    const handleMouseLeave = useCallback(() => setIsPanning(false), []);
-
-    const zoomIn = () => setScale((s) => Math.min(MAX_ZOOM, s + ZOOM_STEP));
-    const zoomOut = () => setScale((s) => Math.max(MIN_ZOOM, s - ZOOM_STEP));
-    const resetView = () => {
-        setScale(1);
-        setTranslate({ x: 0, y: 0 });
-    };
 
     const loadMore = () => {
         setLoadingMore(true);
-        router.get('/dashboard/binary-tree', { depth: requestedDepth + 5 }, { preserveState: false });
+        router.get('/dashboard/binary-tree', { depth: requestedDepth + 4 }, { preserveState: false });
     };
 
     const isDeep = maxDepth >= DEEP_TREE_THRESHOLD;
+    const canReceiveBinary = !!binaryUnlock?.can_receive;
+    const leftPaid = !!binaryUnlock?.left_paid;
+    const rightPaid = !!binaryUnlock?.right_paid;
+    const unlockMessage = canReceiveBinary
+        ? 'Binary commission unlocked. You can receive binary commission now.'
+        : (!leftPaid && !rightPaid)
+            ? 'Binary commission is locked. Please register 1 direct paid user on LEFT and 1 on RIGHT.'
+            : (!leftPaid)
+                ? 'Binary commission is locked. Please bring 1 direct paid user on LEFT side.'
+                : 'Binary commission is locked. Please bring 1 direct paid user on RIGHT side.';
 
     return (
         <DashboardLayout title="My Binary Tree">
@@ -147,6 +117,14 @@ export default function BinaryTree({ tree, leftTotal, rightTotal, maxDepth = 0, 
                 </Card>
             </div>
 
+            <Card className={`mb-6 border ${canReceiveBinary ? 'border-teal-200 bg-teal-50' : 'border-amber-200 bg-amber-50'}`}>
+                <CardBody className="p-4">
+                    <p className={`text-sm font-medium ${canReceiveBinary ? 'text-teal-800' : 'text-amber-800'}`}>
+                        {unlockMessage}
+                    </p>
+                </CardBody>
+            </Card>
+
             {/* Tree card */}
             <Card className="overflow-hidden">
                 <CardHeader
@@ -163,74 +141,11 @@ export default function BinaryTree({ tree, leftTotal, rightTotal, maxDepth = 0, 
                     subtitle={`Outer-only legs. Showing ${requestedDepth} levels · Depth: ${maxDepth}`}
                 />
 
-                {/* Toolbar */}
-                <div className="flex flex-wrap items-center gap-3 px-4 py-3 bg-slate-50 border-b border-slate-200">
-                    <div className="flex items-center gap-2 text-slate-500 text-sm">
-                        <Move className="w-4 h-4 shrink-0" />
-                        <span>Drag to pan</span>
-                    </div>
-                    <div className="hidden sm:block w-px h-5 bg-slate-200" />
-                    <div className="flex items-center gap-2 text-slate-500 text-sm">
-                        <span>Scroll to zoom</span>
-                    </div>
-                    <div className="flex-1 min-w-[120px]" />
-                    <div className="flex items-center gap-1">
-                        <button
-                            type="button"
-                            onClick={zoomOut}
-                            className="p-2.5 rounded-xl border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 hover:border-slate-300 transition-colors"
-                            title="Zoom out"
-                        >
-                            <ZoomOut className="w-4 h-4" />
-                        </button>
-                        <button
-                            type="button"
-                            onClick={zoomIn}
-                            className="p-2.5 rounded-xl border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 hover:border-slate-300 transition-colors"
-                            title="Zoom in"
-                        >
-                            <ZoomIn className="w-4 h-4" />
-                        </button>
-                        <button
-                            type="button"
-                            onClick={resetView}
-                            className="p-2.5 rounded-xl border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 hover:border-slate-300 transition-colors flex items-center gap-1"
-                            title="Reset view"
-                        >
-                            <Maximize2 className="w-4 h-4" />
-                        </button>
-                    </div>
-                    {hasMore && (
-                        <button
-                            type="button"
-                            onClick={loadMore}
-                            disabled={loadingMore}
-                            className="px-4 py-2.5 text-sm font-medium rounded-xl bg-teal-600 text-white hover:bg-teal-700 disabled:opacity-60 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
-                        >
-                            {loadingMore ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
-                            Load more levels
-                        </button>
-                    )}
-                </div>
-
                 {/* Tree area */}
                 <div
-                    ref={containerRef}
-                    className="overflow-auto min-h-[420px] max-h-[72vh] cursor-grab active:cursor-grabbing select-none bg-slate-100/50"
-                    style={{ touchAction: 'none' }}
-                    onWheel={handleWheel}
-                    onMouseDown={handleMouseDown}
-                    onMouseMove={handleMouseMove}
-                    onMouseUp={handleMouseUp}
-                    onMouseLeave={handleMouseLeave}
+                    className="overflow-auto min-h-[420px] max-h-[72vh] bg-slate-100/50"
                 >
-                    <div
-                        className="inline-flex justify-center py-10 px-10 min-w-full min-h-full origin-center"
-                        style={{
-                            transform: `translate(${translate.x}px, ${translate.y}px) scale(${scale})`,
-                            transition: isPanning ? 'none' : `transform ${TRANSITION_MS}ms ease-out`,
-                        }}
-                    >
+                    <div className="inline-flex justify-center py-10 px-10 min-w-full min-h-full">
                         {tree ? (
                             <TreeNode node={tree} level={0} />
                         ) : (
@@ -244,6 +159,19 @@ export default function BinaryTree({ tree, leftTotal, rightTotal, maxDepth = 0, 
                         )}
                     </div>
                 </div>
+                {hasMore && (
+                    <div className="p-4 border-t border-slate-200 bg-white flex justify-center">
+                        <button
+                            type="button"
+                            onClick={loadMore}
+                            disabled={loadingMore}
+                            className="px-5 py-2.5 text-sm font-medium rounded-xl bg-teal-600 text-white hover:bg-teal-700 disabled:opacity-60 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+                        >
+                            {loadingMore ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+                            See more
+                        </button>
+                    </div>
+                )}
             </Card>
         </DashboardLayout>
     );

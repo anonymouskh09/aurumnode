@@ -30,7 +30,7 @@ class PayoutIdempotencyTest extends TestCase
         $this->assertSame('completed', $run2->status);
         $this->assertSame($run1->id, $run2->id);
 
-        $runs = PayoutRun::where('run_type', 'binary_daily')->where('period_key', '2025-02-01')->get();
+        $runs = PayoutRun::where('run_type', 'binary_weekly')->where('period_key', '2025-W05')->get();
         $this->assertCount(1, $runs);
     }
 

@@ -18,7 +18,7 @@ export default function AdminPayoutRunsIndex({ runs, filters }) {
         <AdminLayout title="Payout Runs">
             <div className="mb-4 flex flex-wrap items-center gap-3">
                 <button type="button" onClick={runBinary} className="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700">
-                    Run Binary Payout (today)
+                    Run Binary Payout (previous week)
                 </button>
                 <button type="button" onClick={runRoi} className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">
                     Run ROI Payout (previous week)
@@ -28,7 +28,8 @@ export default function AdminPayoutRunsIndex({ runs, filters }) {
             <form onSubmit={applyFilters} className="mb-4 flex gap-2">
                 <select name="run_type" defaultValue={filters?.run_type} className="rounded border px-3 py-2">
                     <option value="">All types</option>
-                    <option value="binary_daily">binary_daily</option>
+                    <option value="binary_daily">binary_daily (legacy)</option>
+                    <option value="binary_weekly">binary_weekly</option>
                     <option value="roi_weekly">roi_weekly</option>
                 </select>
                 <select name="status" defaultValue={filters?.status} className="rounded border px-3 py-2">

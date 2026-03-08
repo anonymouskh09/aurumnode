@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class PayoutRun extends Model
 {
     public const TYPE_BINARY_DAILY = 'binary_daily';
+    public const TYPE_BINARY_WEEKLY = 'binary_weekly';
     public const TYPE_ROI_WEEKLY = 'roi_weekly';
 
     public const STATUS_PENDING = 'pending';

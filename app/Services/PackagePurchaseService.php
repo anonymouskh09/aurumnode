@@ -27,6 +27,18 @@ class PackagePurchaseService
     {
         $amount = (float) $package->price_usd;
         $isLeader = (bool) $package->is_leader;
+        $lastSamePackage = $user->userPackages()
+            ->where('package_id', $package->id)
+            ->orderByDesc('activated_at')
+            ->orderByDesc('id')
+            ->first();
+
+        if ($lastSamePackage) {
+            $lastSamePackageAt = $lastSamePackage->activated_at ?? $lastSamePackage->created_at;
+            if ($lastSamePackageAt && $lastSamePackageAt->copy()->addDays(7)->isFuture()) {
+                throw new \RuntimeException('Same package has a 7-day cooldown. You can buy a higher package anytime.');
+            }
+        }
 
         if (! in_array($payFrom, ['deposit_wallet', 'withdrawal_wallet'], true)) {
             $payFrom = 'deposit_wallet';

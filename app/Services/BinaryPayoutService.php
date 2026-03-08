@@ -22,15 +22,26 @@ class BinaryPayoutService
     ) {}
 
     /**
-     * Run binary payout for a given date. Uses period_key = Y-m-d.
-     * Skips if run already completed (idempotent).
+     * Compatibility wrapper: date maps to its ISO week payout.
      */
     public function runForDate(\DateTimeInterface $date): PayoutRun
     {
-        $periodKey = $date->format('Y-m-d');
+        $weekKey = \Carbon\Carbon::instance(\Carbon\Carbon::parse($date))->format('o-\WW');
+
+        return $this->runForWeek($weekKey);
+    }
+
+    /**
+     * Run weekly binary payout for a given ISO week key (e.g. 2026-W10).
+     * Skips if run already completed (idempotent).
+     */
+    public function runForWeek(string $weekKey): PayoutRun
+    {
+        [$weekStart, $weekEnd] = $this->resolveWeekWindow($weekKey);
+        $periodKey = $weekKey;
         $run = PayoutRun::firstOrCreate(
             [
-                'run_type' => PayoutRun::TYPE_BINARY_DAILY,
+                'run_type' => PayoutRun::TYPE_BINARY_WEEKLY,
                 'period_key' => $periodKey,
             ],
             [
@@ -47,9 +58,13 @@ class BinaryPayoutService
         $run->update(['status' => PayoutRun::STATUS_RUNNING, 'started_at' => $run->started_at ?? now()]);
 
         try {
-            DB::transaction(function () use ($run, $date, $periodKey) {
-                $dateStr = $date->format('Y-m-d');
-                $logByUser = VolumePointsLog::where('date', $dateStr)->get()->keyBy('user_id');
+            DB::transaction(function () use ($run, $periodKey, $weekStart, $weekEnd) {
+                $logByUser = VolumePointsLog::query()
+                    ->whereBetween('date', [$weekStart->toDateString(), $weekEnd->toDateString()])
+                    ->selectRaw('user_id, SUM(left_points) as left_points, SUM(right_points) as right_points')
+                    ->groupBy('user_id')
+                    ->get()
+                    ->keyBy('user_id');
 
                 $userIds = UserPackage::where('status', UserPackage::STATUS_ACTIVE)
                     ->where('is_maxed_out', false)
@@ -62,7 +77,8 @@ class BinaryPayoutService
                             $userPackage,
                             $logByUser->get($userId),
                             $run,
-                            $periodKey
+                            $periodKey,
+                            $weekEnd->toDateString()
                         );
                     }
                 }
@@ -98,7 +114,7 @@ class BinaryPayoutService
             ->first();
     }
 
-    private function processUserBinary(UserPackage $userPackage, ?VolumePointsLog $log, PayoutRun $run, string $periodKey): void
+    private function processUserBinary(UserPackage $userPackage, ?object $log, PayoutRun $run, string $periodKey, string $logDate): void
     {
         $user = $userPackage->user;
         $package = $userPackage->package;
@@ -119,14 +135,14 @@ class BinaryPayoutService
         $rightVolume = max($rightCarry + $rightLog, $rightPointsTotal);
         $lesser = min($leftVolume, $rightVolume);
 
+        if (! $this->hasBinaryUnlock($user)) {
+            $this->syncCarryNoLoss($user, $leftVolume, $rightVolume);
+            return;
+        }
+
         if ($lesser <= 0) {
-            // Persist one-sided daily volume into carry so it can match on future days.
-            if ($leftLog > 0 || $rightLog > 0) {
-                $user->update([
-                    'left_carry_total' => $leftVolume,
-                    'right_carry_total' => $rightVolume,
-                ]);
-            }
+            // Persist unmatched volume into carry so it can match on future days.
+            $this->syncCarryNoLoss($user, $leftVolume, $rightVolume);
             return;
         }
 
@@ -148,7 +164,7 @@ class BinaryPayoutService
         if ($credited > 0) {
             BinaryBonusLog::create([
                 'user_id' => $user->id,
-                'date' => $periodKey,
+                'date' => $logDate,
                 'left_points' => $leftVolume,
                 'right_points' => $rightVolume,
                 'lesser_points' => $lesser,
@@ -166,6 +182,63 @@ class BinaryPayoutService
                 'right_carry_total' => $rightCarryNew,
                 'left_points_total' => max(0, (float) $user->left_points_total - $lesser),
                 'right_points_total' => max(0, (float) $user->right_points_total - $lesser),
+            ]);
+        }
+    }
+
+    private function resolveWeekWindow(string $weekKey): array
+    {
+        if (! preg_match('/^(\d{4})-W(\d{2})$/', $weekKey, $m)) {
+            throw new \InvalidArgumentException('Invalid week key format. Expected YYYY-Www');
+        }
+
+        $year = (int) $m[1];
+        $week = (int) $m[2];
+        $weekStart = \Carbon\Carbon::now()->setISODate($year, $week)->startOfWeek();
+        $weekEnd = $weekStart->copy()->endOfWeek();
+
+        return [$weekStart, $weekEnd];
+    }
+
+    private function hasBinaryUnlock(User $user): bool
+    {
+        $hasLeftPaidDirect = $user->referrals()
+            ->where('placement_side', User::PLACEMENT_LEFT)
+            ->whereHas('userPackages', function ($q) {
+                $q->where('status', UserPackage::STATUS_ACTIVE)
+                    ->where('is_maxed_out', false)
+                    ->where('invested_amount', '>', 0);
+            })
+            ->exists();
+
+        if (! $hasLeftPaidDirect) {
+            return false;
+        }
+
+        $hasRightPaidDirect = $user->referrals()
+            ->where('placement_side', User::PLACEMENT_RIGHT)
+            ->whereHas('userPackages', function ($q) {
+                $q->where('status', UserPackage::STATUS_ACTIVE)
+                    ->where('is_maxed_out', false)
+                    ->where('invested_amount', '>', 0);
+            })
+            ->exists();
+
+        return $hasRightPaidDirect;
+    }
+
+    private function syncCarryNoLoss(User $user, float $leftVolume, float $rightVolume): void
+    {
+        $nextLeftCarry = max((float) $user->left_carry_total, $leftVolume);
+        $nextRightCarry = max((float) $user->right_carry_total, $rightVolume);
+
+        if (
+            $nextLeftCarry !== (float) $user->left_carry_total
+            || $nextRightCarry !== (float) $user->right_carry_total
+        ) {
+            $user->update([
+                'left_carry_total' => $nextLeftCarry,
+                'right_carry_total' => $nextRightCarry,
             ]);
         }
     }

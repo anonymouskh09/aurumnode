@@ -79,6 +79,9 @@ function PackageCard({ pkg, depositBalance, withdrawalBalance }) {
     const balanceFromSource =
         data.pay_from === 'withdrawal_wallet' ? withdrawalBalance : depositBalance;
     const canAfford = balanceFromSource >= price;
+    const cooldownActive = !!pkg.same_package_cooldown_active;
+    const cooldownDays = Number(pkg.same_package_cooldown_remaining_days ?? 0);
+    const canBuyNow = pkg.status === 'active' && canAfford && !cooldownActive;
 
     return (
         <Card className="overflow-hidden transition-all duration-200 hover:shadow-md hover:-translate-y-0.5">
@@ -105,6 +108,16 @@ function PackageCard({ pkg, depositBalance, withdrawalBalance }) {
                         Insufficient balance. Need ${price.toFixed(2)} in {data.pay_from === 'withdrawal_wallet' ? 'Withdrawal' : 'Deposit'} Wallet.
                     </p>
                 )}
+                {cooldownActive && (
+                    <p className="text-sm text-amber-700 mt-2">
+                        Cooldown: {cooldownDays > 0 ? `${cooldownDays} day${cooldownDays === 1 ? '' : 's'} left` : 'Active'}.
+                    </p>
+                )}
+                {!cooldownActive && pkg.same_package_rebuy_available && (
+                    <p className="text-sm text-teal-700 mt-2">
+                        Cooldown complete. Buy available.
+                    </p>
+                )}
                 <form
                     onSubmit={(e) => {
                         e.preventDefault();
@@ -115,7 +128,7 @@ function PackageCard({ pkg, depositBalance, withdrawalBalance }) {
                     <Button
                         type="submit"
                         variant="primary"
-                        disabled={processing || pkg.status !== 'active' || !canAfford}
+                        disabled={processing || !canBuyNow}
                         className="w-full"
                     >
                         {processing ? 'Processing...' : 'Buy with USDT'}

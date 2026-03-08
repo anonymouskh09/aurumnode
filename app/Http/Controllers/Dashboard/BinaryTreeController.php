@@ -4,13 +4,14 @@ namespace App\Http\Controllers\Dashboard;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Models\UserPackage;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class BinaryTreeController extends Controller
 {
-    private const DEFAULT_DEPTH = 8;
+    private const DEFAULT_DEPTH = 4;
 
     private const MAX_DEPTH_LIMIT = 50;
 
@@ -19,6 +20,15 @@ class BinaryTreeController extends Controller
         $user = $request->user();
         $requestedDepth = (int) $request->query('depth', self::DEFAULT_DEPTH);
         $depth = max(1, min($requestedDepth, self::MAX_DEPTH_LIMIT));
+        $leftDirectPaid = $this->hasPaidDirect($user, User::PLACEMENT_LEFT);
+        $rightDirectPaid = $this->hasPaidDirect($user, User::PLACEMENT_RIGHT);
+        $missingSides = [];
+        if (! $leftDirectPaid) {
+            $missingSides[] = User::PLACEMENT_LEFT;
+        }
+        if (! $rightDirectPaid) {
+            $missingSides[] = User::PLACEMENT_RIGHT;
+        }
 
         $tree = $this->buildTree($user, 0, $depth);
         $actualMaxDepth = $this->computeMaxDepth($tree, 0);
@@ -30,7 +40,25 @@ class BinaryTreeController extends Controller
             'maxDepth' => $actualMaxDepth,
             'requestedDepth' => $depth,
             'hasMore' => $actualMaxDepth >= $depth && (($user->left_child_id || $user->right_child_id) || User::where('binary_parent_id', $user->id)->exists()),
+            'binaryUnlock' => [
+                'can_receive' => $leftDirectPaid && $rightDirectPaid,
+                'left_paid' => $leftDirectPaid,
+                'right_paid' => $rightDirectPaid,
+                'missing_sides' => $missingSides,
+            ],
         ]);
+    }
+
+    private function hasPaidDirect(User $user, string $side): bool
+    {
+        return $user->referrals()
+            ->where('placement_side', $side)
+            ->whereHas('userPackages', function ($q) {
+                $q->where('status', UserPackage::STATUS_ACTIVE)
+                    ->where('is_maxed_out', false)
+                    ->where('invested_amount', '>', 0);
+            })
+            ->exists();
     }
 
     private function buildTree(User $user, int $depth, int $maxDepth): array

@@ -2,8 +2,10 @@
 
 namespace App\Services;
 
+use App\Models\DirectBonusLog;
 use App\Models\EarningsLedger;
 use App\Models\Package;
+use App\Models\Transaction;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 
@@ -52,8 +54,8 @@ class DirectBonusService
         }
 
         $refId = (string) $referredUserPackageId;
-        DB::transaction(function () use ($sponsor, $sponsorPackage, $bonusAmount, $refId) {
-            $this->earningsService->credit(
+        DB::transaction(function () use ($sponsor, $sponsorPackage, $bonusAmount, $refId, $buyer, $referredUserPackageId) {
+            $credited = $this->earningsService->credit(
                 $sponsor,
                 $sponsorPackage,
                 EarningsLedger::TYPE_DIRECT,
@@ -61,6 +63,30 @@ class DirectBonusService
                 $refId,
                 null
             );
+
+            if ($credited <= 0) {
+                return;
+            }
+
+            DirectBonusLog::create([
+                'user_id' => $sponsor->id,
+                'from_user_id' => $buyer->id,
+                'user_package_id' => $referredUserPackageId,
+                'amount' => $credited,
+                'percent' => 10,
+            ]);
+
+            $sponsor->transactions()->create([
+                'type' => Transaction::TYPE_DIRECT_BONUS,
+                'amount' => $credited,
+                'meta_json' => [
+                    'from_user_id' => $buyer->id,
+                    'from_username' => $buyer->username,
+                    'from_name' => $buyer->name,
+                    'percent' => 10,
+                    'source' => 'direct_bonus',
+                ],
+            ]);
         });
     }
 

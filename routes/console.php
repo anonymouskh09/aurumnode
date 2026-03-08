@@ -31,8 +31,8 @@ Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
 
-// Binary bonus: daily at 00:05 server time (idempotent)
-Schedule::command('payout:binary-daily')->dailyAt('00:05');
+// Binary bonus: weekly every Monday 00:05 server time (idempotent)
+Schedule::command('payout:binary-daily')->weeklyOn(1, '00:05');
 
 // Weekly ROI: every Monday 00:30 (idempotent)
 Schedule::command('payout:roi-weekly')->weeklyOn(1, '00:30');

@@ -35,16 +35,14 @@ class PayoutRunsController extends Controller
     }
 
     /**
-     * Run binary payout now. Uses today's date so same-day volume gets paid (manual trigger).
-     * Idempotent.
+     * Run binary payout now (previous week). Idempotent.
      */
     public function runBinary(BinaryPayoutService $service): RedirectResponse
     {
-        $date = now()->startOfDay();
-        $run = $service->runForDate($date);
-        $periodKey = $date->format('Y-m-d');
+        $weekKey = now()->subWeek()->format('o-\WW');
+        $run = $service->runForWeek($weekKey);
 
-        return back()->with('status', "Binary payout for {$periodKey}: {$run->status}");
+        return back()->with('status', "Binary payout for {$weekKey}: {$run->status}");
     }
 
     /**

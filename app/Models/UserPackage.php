@@ -21,6 +21,7 @@ class UserPackage extends Model
         'invested_amount',
         'activated_at',
         'expired_at',
+        'locked_investment_released_at',
         'total_earned',
         'max_cap',
         'cap_multiplier',
@@ -39,6 +40,7 @@ class UserPackage extends Model
             'cap_multiplier' => 'decimal:2',
             'activated_at' => 'datetime',
             'expired_at' => 'datetime',
+            'locked_investment_released_at' => 'datetime',
             'is_maxed_out' => 'boolean',
             'renewal_required' => 'boolean',
         ];

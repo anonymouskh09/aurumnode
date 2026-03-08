@@ -139,17 +139,36 @@ class EarningsService
      */
     public function expirePackageIfNotAlready(UserPackage $userPackage): void
     {
-        if ($userPackage->status === UserPackage::STATUS_EXPIRED_BY_4X) {
+        if (
+            $userPackage->status === UserPackage::STATUS_EXPIRED_BY_4X
+            && $userPackage->locked_investment_released_at
+        ) {
             return;
         }
 
-        $userPackage->update([
-            'status' => UserPackage::STATUS_EXPIRED_BY_4X,
-            'expired_at' => $userPackage->expired_at ?? now(),
-            'is_maxed_out' => true,
-        ]);
-
         $user = $userPackage->user;
+
+        if ($userPackage->status !== UserPackage::STATUS_EXPIRED_BY_4X) {
+            $userPackage->update([
+                'status' => UserPackage::STATUS_EXPIRED_BY_4X,
+                'expired_at' => $userPackage->expired_at ?? now(),
+                'is_maxed_out' => true,
+            ]);
+        }
+
+        if ($user && ! $userPackage->locked_investment_released_at) {
+            $wallet = $this->walletService->getOrCreateWallet($user);
+            $currentInvestment = (float) ($wallet->investment_wallet ?? 0);
+            $packagePrincipal = (float) $userPackage->invested_amount;
+            $deductAmount = min($currentInvestment, $packagePrincipal);
+            if ($deductAmount > 0) {
+                $wallet->decrement('investment_wallet', $deductAmount);
+            }
+            $userPackage->update([
+                'locked_investment_released_at' => now(),
+            ]);
+        }
+
         if ($user && (int) $user->active_package_id === (int) $userPackage->id) {
             $user->update(['active_package_id' => null]);
         }

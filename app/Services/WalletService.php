@@ -161,9 +161,17 @@ class WalletService
             throw new \InvalidArgumentException('Amount must be positive');
         }
 
-        $wallet = $this->getOrCreateWallet($user);
-        $wallet->deposit_wallet = (float) $wallet->deposit_wallet + $amount;
-        $wallet->save();
+        DB::transaction(function () use ($user, $amount) {
+            $wallet = $this->getOrCreateWallet($user);
+            $wallet->deposit_wallet = (float) $wallet->deposit_wallet + $amount;
+            $wallet->save();
+
+            $user->transactions()->create([
+                'type' => Transaction::TYPE_DEPOSIT,
+                'amount' => $amount,
+                'meta_json' => ['to' => 'deposit_wallet'],
+            ]);
+        });
     }
 
     /**
