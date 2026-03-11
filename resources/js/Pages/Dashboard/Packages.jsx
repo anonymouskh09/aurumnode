@@ -3,9 +3,10 @@ import DashboardLayout from '@/Components/DashboardLayout';
 import { Card, CardBody, Button } from '@/Components/ui';
 import { Package, Wallet } from 'lucide-react';
 
-export default function Packages({ packages, deposit_balance_usdt, withdrawal_balance_usdt }) {
+export default function Packages({ packages, deposit_balance_usdt, withdrawal_balance_usdt, highest_purchased_amount }) {
     const depositBalance = parseFloat(deposit_balance_usdt ?? 0);
     const withdrawalBalance = parseFloat(withdrawal_balance_usdt ?? 0);
+    const highestPurchasedAmount = parseFloat(highest_purchased_amount ?? 0);
 
     return (
         <DashboardLayout title="Packages">
@@ -34,6 +35,7 @@ export default function Packages({ packages, deposit_balance_usdt, withdrawal_ba
                         pkg={pkg}
                         depositBalance={depositBalance}
                         withdrawalBalance={withdrawalBalance}
+                        highestPurchasedAmount={highestPurchasedAmount}
                     />
                 ))}
             </div>
@@ -70,7 +72,7 @@ function DemoDepositForm() {
     );
 }
 
-function PackageCard({ pkg, depositBalance, withdrawalBalance }) {
+function PackageCard({ pkg, depositBalance, withdrawalBalance, highestPurchasedAmount }) {
     const { data, setData, post, processing } = useForm({
         package_id: pkg.id,
         pay_from: 'deposit_wallet',
@@ -79,9 +81,8 @@ function PackageCard({ pkg, depositBalance, withdrawalBalance }) {
     const balanceFromSource =
         data.pay_from === 'withdrawal_wallet' ? withdrawalBalance : depositBalance;
     const canAfford = balanceFromSource >= price;
-    const cooldownActive = !!pkg.same_package_cooldown_active;
-    const cooldownDays = Number(pkg.same_package_cooldown_remaining_days ?? 0);
-    const canBuyNow = pkg.status === 'active' && canAfford && !cooldownActive;
+    const blockedByUpgradeRule = highestPurchasedAmount > 0 && price < highestPurchasedAmount;
+    const canBuyNow = pkg.status === 'active' && canAfford && !blockedByUpgradeRule;
 
     return (
         <Card className="overflow-hidden transition-all duration-200 hover:shadow-md hover:-translate-y-0.5">
@@ -92,6 +93,13 @@ function PackageCard({ pkg, depositBalance, withdrawalBalance }) {
                 <h3 className="text-lg font-semibold text-slate-900">{pkg.display_name ?? pkg.name}</h3>
                 <p className="text-2xl font-bold text-teal-600 mt-2">${price.toFixed(2)} USDT</p>
                 <p className="text-sm text-slate-500 mt-1">Status: {pkg.status ?? 'active'}</p>
+                {blockedByUpgradeRule ? (
+                    <p className="text-sm text-rose-600 mt-1">
+                        Blocked: lower than your highest package (${highestPurchasedAmount.toFixed(2)}).
+                    </p>
+                ) : (
+                    <p className="text-sm text-emerald-600 mt-1">Available for purchase.</p>
+                )}
                 <div className="mt-3">
                     <label className="block text-xs font-medium text-slate-600 mb-1">Pay from</label>
                     <select
@@ -108,9 +116,9 @@ function PackageCard({ pkg, depositBalance, withdrawalBalance }) {
                         Insufficient balance. Need ${price.toFixed(2)} in {data.pay_from === 'withdrawal_wallet' ? 'Withdrawal' : 'Deposit'} Wallet.
                     </p>
                 )}
-                {cooldownActive && (
-                    <p className="text-sm text-amber-700 mt-2">
-                        Cooldown: {cooldownDays} day{cooldownDays === 1 ? '' : 's'} left for this package.
+                {blockedByUpgradeRule && (
+                    <p className="text-sm text-rose-600 mt-2">
+                        Buy ${highestPurchasedAmount.toFixed(2)} or any higher package.
                     </p>
                 )}
                 <form

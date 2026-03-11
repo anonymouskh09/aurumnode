@@ -5,9 +5,7 @@ namespace Tests\Feature;
 use App\Models\Package;
 use App\Models\User;
 use App\Models\UserPackage;
-use App\Models\UserPackageProgress;
 use App\Models\Wallet;
-use App\Services\EarningsService;
 use App\Services\PackagePurchaseService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -16,80 +14,77 @@ class IntelligentTransitionTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_user_can_buy_same_package_multiple_times_before_any_maxout(): void
-    {
-        [$user, $package, $purchaseService] = array_slice($this->bootstrapUserWithWalletAndPackage(500, 'P500'), 0, 3);
-
-        $purchaseService->purchase($user, $package, 'deposit_wallet');
-        $purchaseService->purchase($user->fresh(), $package, 'deposit_wallet');
-
-        $count = UserPackage::where('user_id', $user->id)->where('package_id', $package->id)->count();
-        $this->assertSame(2, $count);
-    }
-
-    public function test_after_first_maxout_same_package_immediate_renew_is_allowed(): void
-    {
-        [$user, $package, $purchaseService, $earningsService] = $this->bootstrapUserWithWalletAndPackage(500, 'P500');
-        $purchaseService->purchase($user, $package, 'deposit_wallet');
-        $first = UserPackage::where('user_id', $user->id)->where('package_id', $package->id)->latest('id')->firstOrFail();
-
-        // hit first maxout (500 * 4 = 2000)
-        $credited = $earningsService->credit($user->fresh(), $first, 'DIRECT', 2000, 'mx-1', null);
-        $this->assertSame(2000.0, $credited);
-
-        // immediate same-package renew must be allowed after first maxout
-        $purchaseService->purchase($user->fresh(), $package, 'deposit_wallet');
-        $this->assertDatabaseHas('user_package_progress', [
-            'user_id' => $user->id,
-            'package_id' => $package->id,
-            'maxout_count' => 1,
-        ]);
-    }
-
-    public function test_after_second_maxout_same_package_requires_7_day_wait_but_higher_package_allowed(): void
-    {
-        [$user, $p500, $purchaseService, $earningsService] = $this->bootstrapUserWithWalletAndPackage(500, 'P500');
-        $p2500 = $this->createPackage(2500, 'P2500');
-
-        // first cycle
-        $purchaseService->purchase($user, $p500, 'deposit_wallet');
-        $up1 = UserPackage::where('user_id', $user->id)->where('package_id', $p500->id)->latest('id')->firstOrFail();
-        $this->assertSame(2000.0, $earningsService->credit($user->fresh(), $up1, 'DIRECT', 2000, 'mx-a', null));
-
-        // second cycle
-        $purchaseService->purchase($user->fresh(), $p500, 'deposit_wallet');
-        $up2 = UserPackage::where('user_id', $user->id)->where('package_id', $p500->id)->latest('id')->firstOrFail();
-        $this->assertSame(2000.0, $earningsService->credit($user->fresh(), $up2, 'DIRECT', 2000, 'mx-b', null));
-
-        // third immediate same-package buy should be blocked (7-day cooldown after second maxout)
-        try {
-            $purchaseService->purchase($user->fresh(), $p500, 'deposit_wallet');
-            $this->fail('Expected same-package cooldown after second maxout');
-        } catch (\RuntimeException $e) {
-            $this->assertStringContainsString('cooldown', strtolower($e->getMessage()));
-        }
-
-        // but higher package should still be allowed immediately
-        $purchaseService->purchase($user->fresh(), $p2500, 'deposit_wallet');
-        $this->assertDatabaseHas('user_packages', [
-            'user_id' => $user->id,
-            'package_id' => $p2500->id,
-            'status' => UserPackage::STATUS_ACTIVE,
-        ]);
-        $progress = UserPackageProgress::where('user_id', $user->id)
-            ->where('package_id', $p500->id)
-            ->firstOrFail();
-        $this->assertSame(2, $progress->maxout_count);
-    }
-
-    private function bootstrapUserWithWalletAndPackage(float $price, string $name): array
+    public function test_user_can_buy_any_higher_packages_and_rebuy_same_highest(): void
     {
         $purchaseService = app(PackagePurchaseService::class);
-        $earningsService = app(EarningsService::class);
+        $user = $this->createUserWithWallet(50000);
+        $p100 = $this->createPackage(100, 'P100');
+        $p500 = $this->createPackage(500, 'P500');
+        $p1000 = $this->createPackage(1000, 'P1000');
+
+        $purchaseService->purchase($user, $p100, 'deposit_wallet');
+        $purchaseService->purchase($user->fresh(), $p500, 'deposit_wallet');
+        $purchaseService->purchase($user->fresh(), $p1000, 'deposit_wallet');
+        $purchaseService->purchase($user->fresh(), $p1000, 'deposit_wallet'); // same highest allowed
+
+        $this->assertSame(4, UserPackage::where('user_id', $user->id)->count());
+    }
+
+    public function test_user_cannot_buy_lower_than_highest_purchased(): void
+    {
+        $purchaseService = app(PackagePurchaseService::class);
+        $user = $this->createUserWithWallet(50000);
+        $p500 = $this->createPackage(500, 'P500');
+        $p1000 = $this->createPackage(1000, 'P1000');
+
+        $purchaseService->purchase($user, $p1000, 'deposit_wallet');
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('Lower package blocked');
+        $purchaseService->purchase($user->fresh(), $p500, 'deposit_wallet');
+    }
+
+    public function test_rule_applies_to_existing_users_based_on_purchase_history(): void
+    {
+        $purchaseService = app(PackagePurchaseService::class);
+        $user = $this->createUserWithWallet(50000);
+        $p100 = $this->createPackage(100, 'P100');
+        $p500 = $this->createPackage(500, 'P500');
+        $p1000 = $this->createPackage(1000, 'P1000');
+
+        // simulate old history: already bought 1000 before new rule
+        UserPackage::create([
+            'user_id' => $user->id,
+            'package_id' => $p1000->id,
+            'invested_amount' => 1000,
+            'activated_at' => now()->subDays(30),
+            'status' => UserPackage::STATUS_EXPIRED_BY_4X,
+            'is_maxed_out' => true,
+            'total_earned' => 4000,
+            'max_cap' => 4000,
+            'cap_multiplier' => 4,
+        ]);
+
+        // same highest allowed
+        $purchaseService->purchase($user->fresh(), $p1000, 'deposit_wallet');
+        $this->assertDatabaseHas('user_packages', [
+            'user_id' => $user->id,
+            'package_id' => $p1000->id,
+            'status' => UserPackage::STATUS_ACTIVE,
+        ]);
+
+        // lower blocked for old users too
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('Lower package blocked');
+        $purchaseService->purchase($user->fresh(), $p500, 'deposit_wallet');
+    }
+
+    private function createUserWithWallet(float $deposit): User
+    {
         $user = User::factory()->create(['status' => User::STATUS_PAID]);
         Wallet::create([
             'user_id' => $user->id,
-            'deposit_wallet' => 50000,
+            'deposit_wallet' => $deposit,
             'investment_wallet' => 0,
             'withdrawal_wallet' => 0,
             'direct_bonus_wallet' => 0,
@@ -100,9 +95,7 @@ class IntelligentTransitionTest extends TestCase
             'total_roi' => 0,
             'total_bonus' => 0,
         ]);
-        $package = $this->createPackage($price, $name);
-
-        return [$user, $package, $purchaseService, $earningsService];
+        return $user;
     }
 
     private function createPackage(float $price, string $name): Package

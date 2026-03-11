@@ -5,9 +5,7 @@ namespace App\Services;
 use App\Models\Package;
 use App\Models\Transaction;
 use App\Models\User;
-use App\Models\UserPackageProgress;
 use App\Models\VolumePointsLog;
-use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -28,15 +26,13 @@ class PackagePurchaseService
     {
         $amount = (float) $package->price_usd;
         $isLeader = (bool) $package->is_leader;
-        $progress = UserPackageProgress::where('user_id', $user->id)
-            ->where('package_id', $package->id)
-            ->first();
-        if ($progress && $progress->maxout_count >= 2 && $progress->last_maxed_out_at) {
-            $cooldownEndsAt = Carbon::parse($progress->last_maxed_out_at)->addDays(7);
-            if ($cooldownEndsAt->isFuture()) {
-                $daysLeft = max(1, (int) ceil(now()->diffInHours($cooldownEndsAt, false) / 24));
-                throw new \RuntimeException("This package is on cooldown. Please wait {$daysLeft} day(s) or buy a higher package.");
-            }
+        $highestPurchased = (float) $user->userPackages()->max('invested_amount');
+        if ($highestPurchased > 0 && $amount < $highestPurchased) {
+            throw new \RuntimeException(
+                'Lower package blocked. You can buy your current highest package ($'
+                .number_format($highestPurchased, 2)
+                .') or any higher package.'
+            );
         }
 
         if (! in_array($payFrom, ['deposit_wallet', 'withdrawal_wallet'], true)) {

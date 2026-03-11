@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Dashboard;
 
 use App\Http\Controllers\Controller;
 use App\Models\Package;
-use App\Models\UserPackageProgress;
 use App\Services\PackagePurchaseService;
 use App\Services\WalletService;
 use Illuminate\Http\RedirectResponse;
@@ -22,43 +21,23 @@ class PackageController extends Controller
     public function index(Request $request): Response
     {
         $user = $request->user();
-        $progressByPackage = UserPackageProgress::query()
-            ->where('user_id', $user->id)
-            ->get()
-            ->keyBy('package_id');
-
         $packages = Package::where('status', 'active')
             ->where('is_admin_only', false)
             ->where('is_leader', false)
             ->orderBy('price_usd')
             ->get()
-            ->map(function ($p) use ($progressByPackage) {
-                $progress = $progressByPackage->get($p->id);
-                $cooldownActive = false;
-                $remainingDays = 0;
-                if ($progress && (int) $progress->maxout_count >= 2 && $progress->last_maxed_out_at) {
-                    $cooldownEndsAt = \Carbon\Carbon::parse($progress->last_maxed_out_at)->addDays(7);
-                    $cooldownActive = $cooldownEndsAt->isFuture();
-                    if ($cooldownActive) {
-                        $remainingDays = max(1, (int) ceil(now()->diffInHours($cooldownEndsAt, false) / 24));
-                    }
-                }
+            ->map(fn ($p) => array_merge($p->toArray(), ['display_name' => $p->getDisplayName()]));
 
-                return array_merge($p->toArray(), [
-                    'display_name' => $p->getDisplayName(),
-                    'same_package_cooldown_active' => $cooldownActive,
-                    'same_package_cooldown_remaining_days' => $remainingDays,
-                ]);
-            });
-
-        $wallet = $this->walletService->getOrCreateWallet($request->user());
+        $wallet = $this->walletService->getOrCreateWallet($user);
         $depositBalance = (float) $wallet->deposit_wallet;
         $withdrawalBalance = (float) $wallet->withdrawal_wallet;
+        $highestPurchasedAmount = (float) $user->userPackages()->max('invested_amount');
 
         return Inertia::render('Dashboard/Packages', [
             'packages' => $packages,
             'deposit_balance_usdt' => round($depositBalance, 2),
             'withdrawal_balance_usdt' => round($withdrawalBalance, 2),
+            'highest_purchased_amount' => round($highestPurchasedAmount, 2),
         ]);
     }
 
