@@ -16,6 +16,9 @@ class User extends Authenticatable
     public const PLACEMENT_LEFT = 'left';
     public const PLACEMENT_RIGHT = 'right';
 
+    public const CYCLE_STATUS_ACTIVE = 'ACTIVE';
+    public const CYCLE_STATUS_MAXED_OUT = 'MAXED_OUT';
+
     /**
      * The attributes that are mass assignable.
      *
@@ -42,6 +45,13 @@ class User extends Authenticatable
         'active_package_id',
         'left_carry_total',
         'right_carry_total',
+        'cycle_status',
+        'highest_package_price_in_cycle',
+        'maxout_highest_package_price',
+        'total_investment_in_cycle',
+        'total_cap_in_cycle',
+        'total_earned_in_cycle',
+        'renewal_min_price',
         'status',
         'is_admin',
         'is_blocked',
@@ -71,6 +81,12 @@ class User extends Authenticatable
             'transaction_password' => 'hashed',
             'left_points_total' => 'decimal:2',
             'right_points_total' => 'decimal:2',
+            'highest_package_price_in_cycle' => 'decimal:2',
+            'maxout_highest_package_price' => 'decimal:2',
+            'total_investment_in_cycle' => 'decimal:2',
+            'total_cap_in_cycle' => 'decimal:2',
+            'total_earned_in_cycle' => 'decimal:2',
+            'renewal_min_price' => 'decimal:2',
             'is_admin' => 'boolean',
             'is_blocked' => 'boolean',
         ];

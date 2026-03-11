@@ -4,9 +4,9 @@ namespace App\Http\Controllers\Dashboard;
 
 use App\Http\Controllers\Controller;
 use App\Models\Package;
+use App\Models\UserPackageProgress;
 use App\Services\PackagePurchaseService;
 use App\Services\WalletService;
-use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -22,30 +22,32 @@ class PackageController extends Controller
     public function index(Request $request): Response
     {
         $user = $request->user();
-        $latestByPackage = $user->userPackages()
-            ->select('package_id')
-            ->selectRaw('MAX(COALESCE(activated_at, created_at)) as last_same_package_at')
-            ->groupBy('package_id')
-            ->pluck('last_same_package_at', 'package_id');
+        $progressByPackage = UserPackageProgress::query()
+            ->where('user_id', $user->id)
+            ->get()
+            ->keyBy('package_id');
 
         $packages = Package::where('status', 'active')
             ->where('is_admin_only', false)
             ->where('is_leader', false)
             ->orderBy('price_usd')
             ->get()
-            ->map(function ($p) use ($latestByPackage) {
-                $lastSamePackageAt = $latestByPackage->get($p->id);
-                $cooldownEndsAt = $lastSamePackageAt ? Carbon::parse($lastSamePackageAt)->addDays(7) : null;
-                $cooldownActive = $cooldownEndsAt ? $cooldownEndsAt->isFuture() : false;
-                $remainingHours = $cooldownActive ? max(1, now()->diffInHours($cooldownEndsAt, false)) : 0;
-                $remainingDays = $cooldownActive ? (int) ceil($remainingHours / 24) : 0;
+            ->map(function ($p) use ($progressByPackage) {
+                $progress = $progressByPackage->get($p->id);
+                $cooldownActive = false;
+                $remainingDays = 0;
+                if ($progress && (int) $progress->maxout_count >= 2 && $progress->last_maxed_out_at) {
+                    $cooldownEndsAt = \Carbon\Carbon::parse($progress->last_maxed_out_at)->addDays(7);
+                    $cooldownActive = $cooldownEndsAt->isFuture();
+                    if ($cooldownActive) {
+                        $remainingDays = max(1, (int) ceil(now()->diffInHours($cooldownEndsAt, false) / 24));
+                    }
+                }
 
                 return array_merge($p->toArray(), [
                     'display_name' => $p->getDisplayName(),
                     'same_package_cooldown_active' => $cooldownActive,
                     'same_package_cooldown_remaining_days' => $remainingDays,
-                    'same_package_cooldown_ends_at' => $cooldownEndsAt?->toDateTimeString(),
-                    'same_package_rebuy_available' => ! $cooldownActive && (bool) $lastSamePackageAt,
                 ]);
             });
 

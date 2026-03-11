@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\EarningsLedger;
 use App\Models\User;
 use App\Models\UserPackage;
+use App\Models\UserPackageProgress;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -139,14 +140,14 @@ class EarningsService
      */
     public function expirePackageIfNotAlready(UserPackage $userPackage): void
     {
-        if (
-            $userPackage->status === UserPackage::STATUS_EXPIRED_BY_4X
-            && $userPackage->locked_investment_released_at
-        ) {
+        $alreadyExpiredAndReleased = $userPackage->status === UserPackage::STATUS_EXPIRED_BY_4X
+            && $userPackage->locked_investment_released_at;
+        if ($alreadyExpiredAndReleased) {
             return;
         }
 
         $user = $userPackage->user;
+        $wasExpiredBefore = $userPackage->status === UserPackage::STATUS_EXPIRED_BY_4X;
 
         if ($userPackage->status !== UserPackage::STATUS_EXPIRED_BY_4X) {
             $userPackage->update([
@@ -175,6 +176,21 @@ class EarningsService
 
         if ($userPackage->leader_activation_mode === 'ADMIN_GRANTED') {
             $userPackage->update(['renewal_required' => true]);
+        }
+
+        if (! $alreadyExpiredAndReleased && ! $wasExpiredBefore) {
+            $progress = UserPackageProgress::firstOrCreate(
+                [
+                    'user_id' => $userPackage->user_id,
+                    'package_id' => $userPackage->package_id,
+                ],
+                [
+                    'maxout_count' => 0,
+                    'last_maxed_out_at' => null,
+                ]
+            );
+            $progress->increment('maxout_count');
+            $progress->update(['last_maxed_out_at' => now()]);
         }
     }
 }

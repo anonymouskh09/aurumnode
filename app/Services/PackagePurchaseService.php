@@ -3,10 +3,11 @@
 namespace App\Services;
 
 use App\Models\Package;
-use App\Models\Setting;
 use App\Models\Transaction;
 use App\Models\User;
+use App\Models\UserPackageProgress;
 use App\Models\VolumePointsLog;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -27,16 +28,14 @@ class PackagePurchaseService
     {
         $amount = (float) $package->price_usd;
         $isLeader = (bool) $package->is_leader;
-        $lastSamePackage = $user->userPackages()
+        $progress = UserPackageProgress::where('user_id', $user->id)
             ->where('package_id', $package->id)
-            ->orderByDesc('activated_at')
-            ->orderByDesc('id')
             ->first();
-
-        if ($lastSamePackage) {
-            $lastSamePackageAt = $lastSamePackage->activated_at ?? $lastSamePackage->created_at;
-            if ($lastSamePackageAt && $lastSamePackageAt->copy()->addDays(7)->isFuture()) {
-                throw new \RuntimeException('Same package has a 7-day cooldown. You can buy a higher package anytime.');
+        if ($progress && $progress->maxout_count >= 2 && $progress->last_maxed_out_at) {
+            $cooldownEndsAt = Carbon::parse($progress->last_maxed_out_at)->addDays(7);
+            if ($cooldownEndsAt->isFuture()) {
+                $daysLeft = max(1, (int) ceil(now()->diffInHours($cooldownEndsAt, false) / 24));
+                throw new \RuntimeException("This package is on cooldown. Please wait {$daysLeft} day(s) or buy a higher package.");
             }
         }
 
@@ -45,6 +44,8 @@ class PackagePurchaseService
         }
 
         DB::transaction(function () use ($user, $package, $amount, $isLeader, $payFrom) {
+            $user->refresh();
+
             if ($payFrom === 'withdrawal_wallet') {
                 $this->walletService->deductFromWithdrawal($user, $amount);
             } else {

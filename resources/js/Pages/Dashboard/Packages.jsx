@@ -1,4 +1,4 @@
-import { Link, useForm } from '@inertiajs/react';
+import { useForm } from '@inertiajs/react';
 import DashboardLayout from '@/Components/DashboardLayout';
 import { Card, CardBody, Button } from '@/Components/ui';
 import { Package, Wallet } from 'lucide-react';
@@ -110,12 +110,7 @@ function PackageCard({ pkg, depositBalance, withdrawalBalance }) {
                 )}
                 {cooldownActive && (
                     <p className="text-sm text-amber-700 mt-2">
-                        Cooldown: {cooldownDays > 0 ? `${cooldownDays} day${cooldownDays === 1 ? '' : 's'} left` : 'Active'}.
-                    </p>
-                )}
-                {!cooldownActive && pkg.same_package_rebuy_available && (
-                    <p className="text-sm text-teal-700 mt-2">
-                        Cooldown complete. Buy available.
+                        Cooldown: {cooldownDays} day{cooldownDays === 1 ? '' : 's'} left for this package.
                     </p>
                 )}
                 <form
