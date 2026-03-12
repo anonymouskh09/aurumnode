@@ -66,21 +66,34 @@ class BinaryPayoutService
                     ->get()
                     ->keyBy('user_id');
 
-                $userIds = UserPackage::where('status', UserPackage::STATUS_ACTIVE)
-                    ->where('is_maxed_out', false)
-                    ->distinct()
-                    ->pluck('user_id');
+                $userIds = collect()
+                    ->merge(
+                        UserPackage::where('status', UserPackage::STATUS_ACTIVE)
+                            ->where('is_maxed_out', false)
+                            ->distinct()
+                            ->pluck('user_id')
+                    )
+                    ->merge($logByUser->keys())
+                    ->merge(
+                        User::query()
+                            ->where('left_carry_total', '>', 0)
+                            ->orWhere('right_carry_total', '>', 0)
+                            ->orWhere('left_points_total', '>', 0)
+                            ->orWhere('right_points_total', '>', 0)
+                            ->pluck('id')
+                    )
+                    ->unique()
+                    ->values();
+
                 foreach ($userIds as $userId) {
-                    $userPackage = $this->getEarningPackageForUser($userId);
-                    if ($userPackage) {
-                        $this->processUserBinary(
-                            $userPackage,
-                            $logByUser->get($userId),
-                            $run,
-                            $periodKey,
-                            $weekEnd->toDateString()
-                        );
-                    }
+                    $this->processUserBinary(
+                        (int) $userId,
+                        $this->getEarningPackagesForUser((int) $userId),
+                        $logByUser->get($userId),
+                        $run,
+                        $periodKey,
+                        $weekEnd->toDateString()
+                    );
                 }
 
                 $run->update(['status' => PayoutRun::STATUS_COMPLETED, 'finished_at' => now()]);
@@ -97,31 +110,31 @@ class BinaryPayoutService
         return $run->fresh();
     }
 
-    private function getEarningPackageForUser(int $userId): ?UserPackage
+    private function getEarningPackagesForUser(int $userId)
     {
-        $user = User::find($userId);
-        if ($user && $user->active_package_id) {
-            $up = UserPackage::where('id', $user->active_package_id)->where('user_id', $userId)->first();
-            if ($up && $up->isEarning()) {
-                return $up;
-            }
-        }
         return UserPackage::where('user_id', $userId)
             ->where('status', UserPackage::STATUS_ACTIVE)
             ->where('is_maxed_out', false)
             ->with('package')
             ->orderByDesc('invested_amount')
-            ->first();
+            ->get();
     }
 
-    private function processUserBinary(UserPackage $userPackage, ?object $log, PayoutRun $run, string $periodKey, string $logDate): void
+    private function processUserBinary(
+        int $userId,
+        $earningPackages,
+        ?object $log,
+        PayoutRun $run,
+        string $periodKey,
+        string $logDate
+    ): void
     {
-        $user = $userPackage->user;
-        $package = $userPackage->package;
-        if (! $package || $this->earningsService->isCapReached($userPackage)) {
+        $user = User::find($userId);
+        if (! $user) {
             return;
         }
 
+        $earningPackages = $earningPackages ?? collect();
         $leftCarry = (float) $user->left_carry_total;
         $rightCarry = (float) $user->right_carry_total;
         $leftLog = $log ? (float) $log->left_points : 0;
@@ -135,6 +148,25 @@ class BinaryPayoutService
         $rightVolume = max($rightCarry + $rightLog, $rightPointsTotal);
         $lesser = min($leftVolume, $rightVolume);
 
+        if ($earningPackages->isEmpty()) {
+            if ($lesser > 0) {
+                $this->applyVolumeConsumption($user, $leftVolume, $rightVolume, $lesser);
+                BinaryBonusLog::create([
+                    'user_id' => $user->id,
+                    'date' => $logDate,
+                    'left_points' => $leftVolume,
+                    'right_points' => $rightVolume,
+                    'lesser_points' => $lesser,
+                    'percent_used' => 0,
+                    'payout_amount' => 0,
+                    'carried_left' => $leftVolume - $lesser,
+                    'carried_right' => $rightVolume - $lesser,
+                    'status' => 'wasted_no_active_package',
+                ]);
+            }
+            return;
+        }
+
         if (! $this->hasBinaryUnlock($user)) {
             $this->syncCarryNoLoss($user, $leftVolume, $rightVolume);
             return;
@@ -146,44 +178,70 @@ class BinaryPayoutService
             return;
         }
 
-        $percent = $package->getBinaryPercent();
-        $payoutAmount = round($lesser * ($percent / 100), 2);
-        if ($payoutAmount <= 0) {
+        $remainingMatched = $lesser;
+        $consumedMatched = 0.0;
+        $creditedTotal = 0.0;
+        $weightedPercentNumerator = 0.0;
+
+        foreach ($earningPackages as $userPackage) {
+            if ($remainingMatched <= 0) {
+                break;
+            }
+
+            $package = $userPackage->package;
+            if (! $package || $this->earningsService->isCapReached($userPackage)) {
+                continue;
+            }
+
+            $percent = (float) $package->getBinaryPercent();
+            if ($percent <= 0) {
+                continue;
+            }
+
+            $requestedAmount = $remainingMatched * ($percent / 100);
+            if ($requestedAmount <= 0) {
+                continue;
+            }
+
+            $credited = $this->earningsService->credit(
+                $user,
+                $userPackage,
+                EarningsLedger::TYPE_BINARY,
+                $requestedAmount,
+                $periodKey,
+                $run->id
+            );
+
+            if ($credited <= 0) {
+                continue;
+            }
+
+            $consumedForPackage = min($remainingMatched, $credited / ($percent / 100));
+            $consumedMatched += $consumedForPackage;
+            $remainingMatched = max(0, $remainingMatched - $consumedForPackage);
+            $creditedTotal += $credited;
+            $weightedPercentNumerator += ($consumedForPackage * $percent);
+        }
+
+        if ($consumedMatched <= 0) {
+            $this->syncCarryNoLoss($user, $leftVolume, $rightVolume);
             return;
         }
 
-        $credited = $this->earningsService->credit(
-            $user,
-            $userPackage,
-            EarningsLedger::TYPE_BINARY,
-            $payoutAmount,
-            $periodKey,
-            $run->id
-        );
-
-        if ($credited > 0) {
-            BinaryBonusLog::create([
-                'user_id' => $user->id,
-                'date' => $logDate,
-                'left_points' => $leftVolume,
-                'right_points' => $rightVolume,
-                'lesser_points' => $lesser,
-                'percent_used' => $percent,
-                'payout_amount' => $credited,
-                'carried_left' => $leftVolume - $lesser,
-                'carried_right' => $rightVolume - $lesser,
-                'status' => 'paid',
-            ]);
-            $user->refresh();
-            $leftCarryNew = $leftVolume - $lesser;
-            $rightCarryNew = $rightVolume - $lesser;
-            $user->update([
-                'left_carry_total' => $leftCarryNew,
-                'right_carry_total' => $rightCarryNew,
-                'left_points_total' => max(0, (float) $user->left_points_total - $lesser),
-                'right_points_total' => max(0, (float) $user->right_points_total - $lesser),
-            ]);
-        }
+        $this->applyVolumeConsumption($user, $leftVolume, $rightVolume, $consumedMatched);
+        $effectivePercent = $consumedMatched > 0 ? round($weightedPercentNumerator / $consumedMatched, 2) : 0.0;
+        BinaryBonusLog::create([
+            'user_id' => $user->id,
+            'date' => $logDate,
+            'left_points' => $leftVolume,
+            'right_points' => $rightVolume,
+            'lesser_points' => $lesser,
+            'percent_used' => $effectivePercent,
+            'payout_amount' => round($creditedTotal, 2),
+            'carried_left' => $leftVolume - $consumedMatched,
+            'carried_right' => $rightVolume - $consumedMatched,
+            'status' => $consumedMatched < $lesser ? 'partial_paid' : 'paid',
+        ]);
     }
 
     private function resolveWeekWindow(string $weekKey): array
@@ -241,5 +299,19 @@ class BinaryPayoutService
                 'right_carry_total' => $nextRightCarry,
             ]);
         }
+    }
+
+    private function applyVolumeConsumption(User $user, float $leftVolume, float $rightVolume, float $matchedToConsume): void
+    {
+        $consume = max(0, min($matchedToConsume, min($leftVolume, $rightVolume)));
+        $leftCarryNew = max(0, $leftVolume - $consume);
+        $rightCarryNew = max(0, $rightVolume - $consume);
+
+        $user->update([
+            'left_carry_total' => $leftCarryNew,
+            'right_carry_total' => $rightCarryNew,
+            'left_points_total' => max(0, (float) $user->left_points_total - $consume),
+            'right_points_total' => max(0, (float) $user->right_points_total - $consume),
+        ]);
     }
 }
