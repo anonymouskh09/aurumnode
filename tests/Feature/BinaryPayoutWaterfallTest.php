@@ -16,7 +16,7 @@ class BinaryPayoutWaterfallTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_waterfall_distributes_from_higher_to_lower_with_proportional_volume_consumption(): void
+    public function test_waterfall_credits_by_package_caps_and_clears_lesser_side_fully(): void
     {
         $service = app(BinaryPayoutService::class);
         $user = $this->createUserWithWallet();
@@ -74,17 +74,17 @@ class BinaryPayoutWaterfallTest extends TestCase
 
         $user->refresh();
         $this->assertEqualsWithDelta(1500.00, (float) $user->wallet->binary_bonus_wallet, 0.01);
-        $this->assertEqualsWithDelta(42638.89, (float) $user->left_carry_total, 0.05);
-        $this->assertEqualsWithDelta(42638.89, (float) $user->right_carry_total, 0.05);
+        $this->assertEqualsWithDelta(0.00, (float) $user->left_carry_total, 0.01);
+        $this->assertEqualsWithDelta(0.00, (float) $user->right_carry_total, 0.01);
 
         $this->assertSame(2, EarningsLedger::where('user_id', $user->id)->where('type', EarningsLedger::TYPE_BINARY)->count());
         $this->assertDatabaseHas('binary_bonus_logs', [
             'user_id' => $user->id,
-            'status' => 'partial_paid',
+            'status' => 'paid',
         ]);
     }
 
-    public function test_no_active_package_wastes_matched_volume_without_credit(): void
+    public function test_no_active_package_forfeits_matched_volume_and_clears_lesser_side(): void
     {
         $service = app(BinaryPayoutService::class);
         $user = $this->createUserWithWallet();
@@ -104,11 +104,7 @@ class BinaryPayoutWaterfallTest extends TestCase
         $this->assertEquals(0.0, (float) $user->left_points_total);
         $this->assertEquals(0.0, (float) $user->right_points_total);
         $this->assertSame(0, EarningsLedger::where('user_id', $user->id)->where('type', EarningsLedger::TYPE_BINARY)->count());
-
-        $log = BinaryBonusLog::where('user_id', $user->id)->latest('id')->first();
-        $this->assertNotNull($log);
-        $this->assertSame('wasted_no_active_package', $log->status);
-        $this->assertEquals(0.0, (float) $log->payout_amount);
+        $this->assertSame(0, BinaryBonusLog::where('user_id', $user->id)->count());
     }
 
     private function createUserWithWallet(): User

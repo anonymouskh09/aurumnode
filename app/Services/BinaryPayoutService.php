@@ -149,20 +149,9 @@ class BinaryPayoutService
         $lesser = min($leftVolume, $rightVolume);
 
         if ($earningPackages->isEmpty()) {
+            // No active earning package: matched volume is forfeited, weaker leg clears.
             if ($lesser > 0) {
                 $this->applyVolumeConsumption($user, $leftVolume, $rightVolume, $lesser);
-                BinaryBonusLog::create([
-                    'user_id' => $user->id,
-                    'date' => $logDate,
-                    'left_points' => $leftVolume,
-                    'right_points' => $rightVolume,
-                    'lesser_points' => $lesser,
-                    'percent_used' => 0,
-                    'payout_amount' => 0,
-                    'carried_left' => $leftVolume - $lesser,
-                    'carried_right' => $rightVolume - $lesser,
-                    'status' => 'wasted_no_active_package',
-                ]);
             }
             return;
         }
@@ -179,9 +168,7 @@ class BinaryPayoutService
         }
 
         $remainingMatched = $lesser;
-        $consumedMatched = 0.0;
         $creditedTotal = 0.0;
-        $weightedPercentNumerator = 0.0;
 
         foreach ($earningPackages as $userPackage) {
             if ($remainingMatched <= 0) {
@@ -217,31 +204,28 @@ class BinaryPayoutService
             }
 
             $consumedForPackage = min($remainingMatched, $credited / ($percent / 100));
-            $consumedMatched += $consumedForPackage;
             $remainingMatched = max(0, $remainingMatched - $consumedForPackage);
             $creditedTotal += $credited;
-            $weightedPercentNumerator += ($consumedForPackage * $percent);
         }
 
-        if ($consumedMatched <= 0) {
-            $this->syncCarryNoLoss($user, $leftVolume, $rightVolume);
-            return;
-        }
+        // Business rule: always clear the weaker leg fully after each eligible run.
+        $this->applyVolumeConsumption($user, $leftVolume, $rightVolume, $lesser);
 
-        $this->applyVolumeConsumption($user, $leftVolume, $rightVolume, $consumedMatched);
-        $effectivePercent = $consumedMatched > 0 ? round($weightedPercentNumerator / $consumedMatched, 2) : 0.0;
-        BinaryBonusLog::create([
-            'user_id' => $user->id,
-            'date' => $logDate,
-            'left_points' => $leftVolume,
-            'right_points' => $rightVolume,
-            'lesser_points' => $lesser,
-            'percent_used' => $effectivePercent,
-            'payout_amount' => round($creditedTotal, 2),
-            'carried_left' => $leftVolume - $consumedMatched,
-            'carried_right' => $rightVolume - $consumedMatched,
-            'status' => $consumedMatched < $lesser ? 'partial_paid' : 'paid',
-        ]);
+        if ($creditedTotal > 0) {
+            $effectivePercent = $lesser > 0 ? round(($creditedTotal / $lesser) * 100, 2) : 0.0;
+            BinaryBonusLog::create([
+                'user_id' => $user->id,
+                'date' => $logDate,
+                'left_points' => $leftVolume,
+                'right_points' => $rightVolume,
+                'lesser_points' => $lesser,
+                'percent_used' => $effectivePercent,
+                'payout_amount' => round($creditedTotal, 2),
+                'carried_left' => $leftVolume - $lesser,
+                'carried_right' => $rightVolume - $lesser,
+                'status' => 'paid',
+            ]);
+        }
     }
 
     private function resolveWeekWindow(string $weekKey): array
