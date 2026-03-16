@@ -14,12 +14,12 @@ export default function Rank({ currentRank, nextRank, lesserSide }) {
                 <Card>
                     <CardBody>
                         <div className="flex items-center gap-3">
-                            <div className="w-12 h-12 rounded-2xl bg-teal-50 flex items-center justify-center text-teal-600">
+                            <div className="w-12 h-12 rounded-2xl bg-amber-500/10 flex items-center justify-center text-amber-300">
                                 <Award className="w-6 h-6" />
                             </div>
                             <div>
-                                <p className="text-sm text-slate-500">Current rank</p>
-                                <p className="text-2xl font-bold text-teal-700">
+                                <p className="text-sm text-slate-400">Current rank</p>
+                                <p className="text-2xl font-bold text-amber-300">
                                     {currentRank?.name ?? 'No rank yet'}
                                 </p>
                             </div>
@@ -29,8 +29,8 @@ export default function Rank({ currentRank, nextRank, lesserSide }) {
 
                 <Card>
                     <CardBody>
-                        <p className="text-sm text-slate-500">Lesser side business (USDT)</p>
-                        <p className="text-2xl font-bold text-slate-900 mt-1">
+                        <p className="text-sm text-slate-400">Lesser side business (USDT)</p>
+                        <p className="text-2xl font-bold text-slate-100 mt-1">
                             ${(lesserSide ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                         </p>
                     </CardBody>
@@ -40,19 +40,19 @@ export default function Rank({ currentRank, nextRank, lesserSide }) {
                     <Card>
                         <CardBody>
                             <div className="flex items-center gap-3 mb-4">
-                                <div className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center">
-                                    <Target className="w-6 h-6 text-slate-500" />
+                                <div className="w-12 h-12 rounded-2xl bg-[#1a1c28] flex items-center justify-center">
+                                    <Target className="w-6 h-6 text-slate-400" />
                                 </div>
                                 <div>
-                                    <p className="text-sm text-slate-500">Next rank</p>
-                                    <p className="text-lg font-semibold text-slate-900">{nextRank.name}</p>
+                                    <p className="text-sm text-slate-400">Next rank</p>
+                                    <p className="text-lg font-semibold text-slate-100">{nextRank.name}</p>
                                 </div>
                             </div>
-                            <p className="text-sm text-slate-600">
+                            <p className="text-sm text-slate-300">
                                 Required: ${required.toLocaleString(undefined, { minimumFractionDigits: 2 })} lesser side (USDT)
                             </p>
                             <ProgressBar value={lesserSide ?? 0} max={required} showLabel className="mt-2" />
-                            <p className="text-sm font-medium text-teal-600 mt-2">
+                            <p className="text-sm font-medium text-amber-300 mt-2">
                                 Remaining: ${remaining.toLocaleString(undefined, { minimumFractionDigits: 2 })} USDT
                             </p>
                         </CardBody>
@@ -62,3 +62,6 @@ export default function Rank({ currentRank, nextRank, lesserSide }) {
         </DashboardLayout>
     );
 }
+
+
+

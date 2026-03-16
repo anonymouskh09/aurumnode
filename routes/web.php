@@ -24,8 +24,13 @@ use Inertia\Inertia;
 // Public landing pages (Inertia React)
 Route::get('/', fn () => Inertia::render('Home'))->name('home');
 Route::get('/about', fn () => Inertia::render('About'))->name('about');
-Route::get('/terms', fn () => Inertia::render('Terms'))->name('terms');
-Route::get('/privacy', fn () => Inertia::render('Privacy'))->name('privacy');
+Route::get('/legal-compliance', fn () => Inertia::render('LegalCompliance'))->name('legal-compliance');
+Route::get('/terms', fn () => Inertia::render('LegalCompliance'))->name('terms');
+Route::get('/privacy', fn () => Inertia::render('LegalCompliance'))->name('privacy');
+Route::get('/risk-disclosure', fn () => Inertia::render('LegalCompliance'))->name('risk-disclosure');
+Route::get('/acceptable-use-policy', fn () => Inertia::render('AcceptableUsePolicy'))->name('acceptable-use-policy');
+Route::get('/kyc-policy', fn () => Inertia::render('KycPolicy'))->name('kyc-policy');
+Route::get('/aml-policy', fn () => Inertia::render('AmlPolicy'))->name('aml-policy');
 Route::get('/contact', fn () => Inertia::render('Contact'))->name('contact');
 
 // Auth

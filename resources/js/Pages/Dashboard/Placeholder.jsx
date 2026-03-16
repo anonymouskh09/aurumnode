@@ -6,10 +6,13 @@ export default function Placeholder({ title }) {
         <DashboardLayout title={title}>
             <Card>
                 <CardBody className="text-center py-16">
-                    <p className="text-slate-500 text-lg">Coming Soon</p>
+                    <p className="text-slate-400 text-lg">Coming Soon</p>
                     <p className="text-slate-400 mt-2">This feature is not yet implemented.</p>
                 </CardBody>
             </Card>
         </DashboardLayout>
     );
 }
+
+
+

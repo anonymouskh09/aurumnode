@@ -27,22 +27,22 @@ function TreeNode({ node, level = 0 }) {
                     px-4 py-2.5 rounded-xl border-2 text-sm font-medium min-w-[110px] max-w-[140px] text-center shrink-0
                     transition-shadow duration-200
                     ${isRoot
-                        ? 'ring-2 ring-teal-200 ring-offset-2 ring-offset-slate-50 shadow-md'
+                        ? 'ring-2 ring-amber-200 ring-offset-2 ring-offset-slate-50 shadow-md'
                         : ''
                     }
                     ${isPaid
-                        ? 'bg-teal-50 border-teal-400 text-teal-900 shadow-sm'
-                        : 'bg-white border-slate-200 text-slate-700 hover:border-slate-300'
+                        ? 'bg-amber-500/10 border-amber-400 text-amber-100 shadow-sm'
+                        : 'bg-[#1f2231] border-amber-500/20 text-slate-300 hover:border-amber-500/30'
                     }
                 `}
             >
                 <span className="text-[10px] uppercase tracking-wide text-slate-400 font-medium block mb-1">
                     Level {node.level ?? level + 1}
                 </span>
-                <span className="font-semibold text-slate-900 block truncate" title={displayName}>
+                <span className="font-semibold text-slate-100 block truncate" title={displayName}>
                     {displayName}
                 </span>
-                <div className="flex justify-center gap-3 mt-1.5 text-xs text-slate-500">
+                <div className="flex justify-center gap-3 mt-1.5 text-xs text-slate-400">
                     <span title="Left volume (USDT)">L: ${(node.left_points ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                     <span title="Right volume (USDT)">R: ${(node.right_points ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                 </div>
@@ -91,12 +91,12 @@ export default function BinaryTree({ tree, leftTotal, rightTotal, maxDepth = 0, 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
                 <Card className="overflow-hidden">
                     <CardBody className="flex items-center gap-4 p-5">
-                        <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-teal-100 to-cyan-100 flex items-center justify-center text-teal-600 shrink-0">
+                        <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-100 to-cyan-100 flex items-center justify-center text-amber-300 shrink-0">
                             <ChevronLeft className="w-7 h-7" strokeWidth={2.5} />
                         </div>
                         <div className="min-w-0">
-                            <p className="text-sm font-medium text-slate-500">Left leg total (USDT)</p>
-                            <p className="text-2xl font-bold text-slate-900 mt-0.5">
+                            <p className="text-sm font-medium text-slate-400">Left leg total (USDT)</p>
+                            <p className="text-2xl font-bold text-slate-100 mt-0.5">
                                 ${(leftTotal ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                             </p>
                         </div>
@@ -104,12 +104,12 @@ export default function BinaryTree({ tree, leftTotal, rightTotal, maxDepth = 0, 
                 </Card>
                 <Card className="overflow-hidden">
                     <CardBody className="flex items-center gap-4 p-5">
-                        <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-teal-100 to-cyan-100 flex items-center justify-center text-teal-600 shrink-0">
+                        <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-100 to-cyan-100 flex items-center justify-center text-amber-300 shrink-0">
                             <ChevronRight className="w-7 h-7" strokeWidth={2.5} />
                         </div>
                         <div className="min-w-0">
-                            <p className="text-sm font-medium text-slate-500">Right leg total (USDT)</p>
-                            <p className="text-2xl font-bold text-slate-900 mt-0.5">
+                            <p className="text-sm font-medium text-slate-400">Right leg total (USDT)</p>
+                            <p className="text-2xl font-bold text-slate-100 mt-0.5">
                                 ${(rightTotal ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                             </p>
                         </div>
@@ -117,9 +117,9 @@ export default function BinaryTree({ tree, leftTotal, rightTotal, maxDepth = 0, 
                 </Card>
             </div>
 
-            <Card className={`mb-6 border ${canReceiveBinary ? 'border-teal-200 bg-teal-50' : 'border-amber-200 bg-amber-50'}`}>
+            <Card className={`mb-6 border ${canReceiveBinary ? 'border-amber-500/30 bg-amber-500/10' : 'border-amber-500/30 bg-amber-500/10'}`}>
                 <CardBody className="p-4">
-                    <p className={`text-sm font-medium ${canReceiveBinary ? 'text-teal-800' : 'text-amber-800'}`}>
+                    <p className={`text-sm font-medium ${canReceiveBinary ? 'text-amber-200' : 'text-amber-200'}`}>
                         {unlockMessage}
                     </p>
                 </CardBody>
@@ -132,7 +132,7 @@ export default function BinaryTree({ tree, leftTotal, rightTotal, maxDepth = 0, 
                         <span className="flex items-center gap-2 flex-wrap">
                             <span>Binary tree</span>
                             {isDeep && (
-                                <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium bg-amber-100 text-amber-800 border border-amber-200">
+                                <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium bg-amber-100 text-amber-200 border border-amber-500/30">
                                     Deep Tree
                                 </span>
                             )}
@@ -143,29 +143,29 @@ export default function BinaryTree({ tree, leftTotal, rightTotal, maxDepth = 0, 
 
                 {/* Tree area */}
                 <div
-                    className="overflow-auto min-h-[420px] max-h-[72vh] bg-slate-100/50"
+                    className="overflow-auto min-h-[420px] max-h-[72vh] bg-[#1a1c28]/70"
                 >
                     <div className="inline-flex justify-center py-10 px-10 min-w-full min-h-full">
                         {tree ? (
                             <TreeNode node={tree} level={0} />
                         ) : (
                             <div className="flex flex-col items-center justify-center py-16 text-center">
-                                <div className="w-16 h-16 rounded-2xl bg-slate-200 flex items-center justify-center text-slate-400 mb-4">
+                                <div className="w-16 h-16 rounded-2xl bg-[#262a3b] flex items-center justify-center text-slate-400 mb-4">
                                     <ChevronLeft className="w-8 h-8" />
                                 </div>
-                                <p className="text-slate-600 font-medium">No tree data yet</p>
-                                <p className="text-sm text-slate-500 mt-1">Your binary tree will appear here once you have referrals.</p>
+                                <p className="text-slate-300 font-medium">No tree data yet</p>
+                                <p className="text-sm text-slate-400 mt-1">Your binary tree will appear here once you have referrals.</p>
                             </div>
                         )}
                     </div>
                 </div>
                 {hasMore && (
-                    <div className="p-4 border-t border-slate-200 bg-white flex justify-center">
+                    <div className="p-4 border-t border-amber-500/20 bg-[#1f2231] flex justify-center">
                         <button
                             type="button"
                             onClick={loadMore}
                             disabled={loadingMore}
-                            className="px-5 py-2.5 text-sm font-medium rounded-xl bg-teal-600 text-white hover:bg-teal-700 disabled:opacity-60 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+                            className="px-5 py-2.5 text-sm font-medium rounded-xl bg-amber-600 text-white hover:bg-amber-700 disabled:opacity-60 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
                         >
                             {loadingMore ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
                             See more
@@ -176,3 +176,6 @@ export default function BinaryTree({ tree, leftTotal, rightTotal, maxDepth = 0, 
         </DashboardLayout>
     );
 }
+
+
+

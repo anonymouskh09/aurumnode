@@ -72,29 +72,29 @@ export default function DashboardIndex({
             <div className="space-y-8">
                 {/* Deposit / Investment Section */}
                 <section>
-                    <h2 className="text-lg font-semibold text-slate-900 mb-4">Deposit / Investment (USDT)</h2>
+                    <h2 className="text-lg font-semibold text-slate-100 mb-4">Deposit / Investment (USDT)</h2>
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                        <Card className="border-2 border-teal-200 bg-teal-50/50">
+                        <Card className="border-2 border-amber-500/25 bg-[#1f2231]">
                             <CardBody className="flex flex-col">
-                                <div className="flex items-center gap-2 text-teal-800">
+                                <div className="flex items-center gap-2 text-amber-200">
                                     <Wallet className="w-5 h-5 shrink-0" />
                                     <span className="font-semibold">Deposit Wallet (USDT)</span>
                                 </div>
-                                <p className="text-2xl font-bold text-slate-900 mt-2">${Number(wallet?.deposit_wallet ?? 0).toFixed(2)}</p>
-                                <p className="text-sm text-slate-600 mt-1">Use for packages or transfer to other users.</p>
+                                <p className="text-2xl font-bold text-slate-100 mt-2">${Number(wallet?.deposit_wallet ?? 0).toFixed(2)}</p>
+                                <p className="text-sm text-slate-300 mt-1">Use for packages or transfer to other users.</p>
                                 <Link href="/dashboard/transfers" className="mt-3">
                                     <Button variant="primary" size="sm">Transfer to user</Button>
                                 </Link>
                             </CardBody>
                         </Card>
-                        <Card className="border-2 border-amber-200 bg-amber-50/50">
+                        <Card className="border-2 border-amber-500/25 bg-[#1f2231]">
                             <CardBody className="flex flex-col">
-                                <div className="flex items-center gap-2 text-amber-800">
+                                <div className="flex items-center gap-2 text-amber-200">
                                     <Lock className="w-5 h-5 shrink-0" />
                                     <span className="font-semibold">Locked Investment</span>
                                 </div>
-                                <p className="text-2xl font-bold text-slate-900 mt-2">${Number(investmentBalance ?? 0).toFixed(2)}</p>
-                                <div className="mt-3 flex items-center gap-2 text-sm text-amber-700" title="Investment locked. Withdrawal not available.">
+                                <p className="text-2xl font-bold text-slate-100 mt-2">${Number(investmentBalance ?? 0).toFixed(2)}</p>
+                                <div className="mt-3 flex items-center gap-2 text-sm text-amber-300" title="Investment locked. Withdrawal not available.">
                                     <Lock className="w-4 h-4" />
                                     <span>Withdraw disabled</span>
                                 </div>
@@ -102,12 +102,12 @@ export default function DashboardIndex({
                         </Card>
                         <Card>
                             <CardBody className="flex flex-col">
-                                <div className="flex items-center gap-2 text-teal-700">
+                                <div className="flex items-center gap-2 text-amber-200">
                                     <PiggyBank className="w-5 h-5 shrink-0" />
                                     <span className="font-semibold">Earnings (Withdrawable)</span>
                                 </div>
-                                <p className="text-2xl font-bold text-slate-900 mt-2">${Number(earningsBalance ?? 0).toFixed(2)}</p>
-                                <p className="text-sm text-slate-600 mt-1">Transfer to Withdrawal Wallet to request payout.</p>
+                                <p className="text-2xl font-bold text-slate-100 mt-2">${Number(earningsBalance ?? 0).toFixed(2)}</p>
+                                <p className="text-sm text-slate-300 mt-1">Transfer to Withdrawal Wallet to request payout.</p>
                                 <Link href="/dashboard/transfers" className="mt-3">
                                     <Button variant="primary" size="sm">Transfer to withdrawal</Button>
                                 </Link>
@@ -122,30 +122,30 @@ export default function DashboardIndex({
                         <button
                             type="button"
                             onClick={() => setShowActivePackages((v) => !v)}
-                            className="w-full flex items-center justify-between gap-2 rounded-xl border-2 border-slate-200 bg-white px-4 py-3 text-left hover:border-teal-300 hover:bg-slate-50 transition-colors"
+                            className="w-full flex items-center justify-between gap-2 rounded-xl border-2 border-amber-500/20 bg-[#1f2231] px-4 py-3 text-left hover:border-amber-300 hover:bg-[#1f2231] transition-colors"
                         >
-                            <span className="text-lg font-semibold text-slate-900">Active packages ({packageCards.length})</span>
-                            {showActivePackages ? <ChevronUp className="w-5 h-5 text-slate-500 shrink-0" /> : <ChevronDown className="w-5 h-5 text-slate-500 shrink-0" />}
+                            <span className="text-lg font-semibold text-slate-100">Active packages ({packageCards.length})</span>
+                            {showActivePackages ? <ChevronUp className="w-5 h-5 text-slate-400 shrink-0" /> : <ChevronDown className="w-5 h-5 text-slate-400 shrink-0" />}
                         </button>
                         {showActivePackages && (
                             <div className="mt-4 space-y-4">
                                 {packageCards.map((p) => (
-                                    <Card key={p.id} className={p.is_active ? 'border-2 border-teal-300 bg-teal-50/30' : ''}>
+                                    <Card key={p.id} className={p.is_active ? 'border-2 border-amber-300 bg-amber-500/10' : ''}>
                                         <CardBody>
                                             <div className="flex flex-wrap items-center justify-between gap-4">
                                                 <div>
-                                                    <p className="text-sm text-slate-500">
+                                                    <p className="text-sm text-slate-400">
                                                         {p.display_name} (${Number(p.price).toFixed(2)})
-                                                        {p.is_active && <span className="ml-2 text-teal-600 font-medium">• Active</span>}
+                                                        {p.is_active && <span className="ml-2 text-amber-300 font-medium">• Active</span>}
                                                     </p>
                                                     <p className="mt-1">
-                                                        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-800">
+                                                        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-[#1a1c28] text-slate-300 border border-amber-500/20">
                                                             Status: {p.status}
                                                         </span>
                                                     </p>
                                                 </div>
                                                 <div className="min-w-[200px]">
-                                                    <p className="text-sm text-slate-500 mb-1">Cap progress (4X)</p>
+                                                    <p className="text-sm text-slate-400 mb-1">Cap progress (4X)</p>
                                                     <p className="text-lg font-semibold">${Number(p.total_earnings).toFixed(2)} / ${Number(p.cap).toFixed(2)}</p>
                                                     <ProgressBar value={p.total_earnings} max={p.cap || 1} showLabel className="mt-2" />
                                                 </div>
@@ -153,10 +153,10 @@ export default function DashboardIndex({
                                         </CardBody>
                                     </Card>
                                 ))}
-                                <Card className="bg-slate-50 border-slate-200">
+                                <Card className="bg-[#1f2231] border-amber-500/20">
                                     <CardBody>
-                                        <p className="text-sm text-slate-600 mb-1">Total (all packages)</p>
-                                        <p className="text-xl font-bold text-slate-900">
+                                        <p className="text-sm text-slate-300 mb-1">Total (all packages)</p>
+                                        <p className="text-xl font-bold text-slate-100">
                                             Earned: ${Number(totalEarningsFromCap).toFixed(2)} / Cap: ${Number(cap).toFixed(2)} • Remaining: ${remaining.toFixed(2)}
                                         </p>
                                         <ProgressBar value={totalEarningsFromCap} max={cap || 1} showLabel className="mt-2" />
@@ -169,7 +169,7 @@ export default function DashboardIndex({
 
                 {/* Wallet Cards Grid */}
                 <section>
-                    <h2 className="text-lg font-semibold text-slate-900 mb-4">Wallets (USDT)</h2>
+                    <h2 className="text-lg font-semibold text-slate-100 mb-4">Wallets (USDT)</h2>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
                         {walletCards.map(({ key, label, subtitle, locked }) => {
                             const Icon = walletIcons[key] || Wallet;
@@ -190,7 +190,7 @@ export default function DashboardIndex({
 
                 {/* Stats Strip */}
                 <section>
-                    <h2 className="text-lg font-semibold text-slate-900 mb-4">Overview</h2>
+                    <h2 className="text-lg font-semibold text-slate-100 mb-4">Overview</h2>
                     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                         {stats.map(({ label, value, icon: Icon }) => (
                             <StatCard key={label} label={label} value={value} icon={Icon} />
@@ -198,7 +198,7 @@ export default function DashboardIndex({
                     </div>
                     {packageCards.length > 0 && cap > 0 && (
                         <div className="mt-3">
-                            <p className="text-sm text-slate-500 mb-2">Total cap progress (all packages, 4X)</p>
+                            <p className="text-sm text-slate-400 mb-2">Total cap progress (all packages, 4X)</p>
                             <ProgressBar value={totalEarningsFromCap} max={cap || 1} showLabel />
                         </div>
                     )}
@@ -222,10 +222,10 @@ export default function DashboardIndex({
                                     <Link
                                         key={price}
                                         href="/dashboard/packages"
-                                        className="block p-4 rounded-xl border-2 border-slate-200 hover:border-teal-500 hover:bg-teal-50/50 transition-all duration-200 text-center"
+                                        className="block p-4 rounded-xl border-2 border-amber-500/20 hover:border-amber-500 hover:bg-[#1f2231] transition-all duration-200 text-center"
                                     >
-                                        <p className="text-lg font-bold text-teal-700">{price}</p>
-                                        <p className="text-xs text-slate-500 mt-1">USD</p>
+                                        <p className="text-lg font-bold text-amber-300">{price}</p>
+                                        <p className="text-xs text-slate-400 mt-1">USD</p>
                                     </Link>
                                 ))}
                             </div>
@@ -247,3 +247,8 @@ export default function DashboardIndex({
         </DashboardLayout>
     );
 }
+
+
+
+
+

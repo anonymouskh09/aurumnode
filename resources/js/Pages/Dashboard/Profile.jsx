@@ -2,7 +2,7 @@ import { useForm } from '@inertiajs/react';
 import DashboardLayout from '@/Components/DashboardLayout';
 import { Card, CardHeader, CardBody, Button } from '@/Components/ui';
 
-const inputClass = 'block w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm focus:border-teal-500 focus:ring-1 focus:ring-teal-500';
+const inputClass = 'block w-full rounded-xl border border-amber-500/20 px-4 py-2.5 text-sm focus:border-amber-500 focus:ring-1 focus:ring-amber-500';
 
 export default function Profile({ auth, kycDocuments, errors: serverErrors }) {
     const profileForm = useForm({
@@ -21,22 +21,22 @@ export default function Profile({ auth, kycDocuments, errors: serverErrors }) {
                     <CardBody>
                         <form onSubmit={(e) => { e.preventDefault(); profileForm.put('/dashboard/profile'); }} className="space-y-4">
                             <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-1">Username</label>
-                                <p className="text-slate-700 font-medium py-2">{auth.user?.username ?? '—'}</p>
-                                <p className="text-xs text-slate-500">Your referral link uses this username.</p>
+                                <label className="block text-sm font-medium text-slate-300 mb-1">Username</label>
+                                <p className="text-slate-300 font-medium py-2">{auth.user?.username ?? '—'}</p>
+                                <p className="text-xs text-slate-400">Your referral link uses this username.</p>
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-1">Name</label>
+                                <label className="block text-sm font-medium text-slate-300 mb-1">Name</label>
                                 <input type="text" value={profileForm.data.name} onChange={(e) => profileForm.setData('name', e.target.value)} className={inputClass} />
                                 {err('name') && <p className="text-sm text-red-600 mt-1">{err('name')}</p>}
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-1">Email</label>
+                                <label className="block text-sm font-medium text-slate-300 mb-1">Email</label>
                                 <input type="email" value={profileForm.data.email} onChange={(e) => profileForm.setData('email', e.target.value)} className={inputClass} />
                                 {err('email') && <p className="text-sm text-red-600 mt-1">{err('email')}</p>}
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-1">USDT withdrawal address</label>
+                                <label className="block text-sm font-medium text-slate-300 mb-1">USDT withdrawal address</label>
                                 <input type="text" value={profileForm.data.usdt_address} onChange={(e) => profileForm.setData('usdt_address', e.target.value)} placeholder="Enter USDT address" className={inputClass} />
                                 {err('usdt_address') && <p className="text-sm text-red-600 mt-1">{err('usdt_address')}</p>}
                             </div>
@@ -66,16 +66,16 @@ function TransactionPasswordForm({ errors: serverErrors }) {
             <CardBody>
                 <form onSubmit={(e) => { e.preventDefault(); post('/dashboard/profile/transaction-password'); }} className="space-y-4">
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-1">Current (leave blank if first time)</label>
+                        <label className="block text-sm font-medium text-slate-300 mb-1">Current (leave blank if first time)</label>
                         <input type="password" value={data.current_transaction_password} onChange={(e) => setData('current_transaction_password', e.target.value)} className={inputClass} />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-1">New transaction password</label>
+                        <label className="block text-sm font-medium text-slate-300 mb-1">New transaction password</label>
                         <input type="password" value={data.transaction_password} onChange={(e) => setData('transaction_password', e.target.value)} className={inputClass} />
                         {err('transaction_password') && <p className="text-sm text-red-600 mt-1">{err('transaction_password')}</p>}
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-1">Confirm</label>
+                        <label className="block text-sm font-medium text-slate-300 mb-1">Confirm</label>
                         <input type="password" value={data.transaction_password_confirmation} onChange={(e) => setData('transaction_password_confirmation', e.target.value)} className={inputClass} />
                     </div>
                     <Button type="submit" variant="primary" disabled={processing}>Update</Button>
@@ -94,7 +94,7 @@ function KycSection({ kycDocuments }) {
             <CardBody>
                 <form onSubmit={(e) => { e.preventDefault(); post('/dashboard/profile/kyc', { forceFormData: true }); }} className="space-y-4">
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-1">Document type</label>
+                        <label className="block text-sm font-medium text-slate-300 mb-1">Document type</label>
                         <select value={data.document_type} onChange={(e) => setData('document_type', e.target.value)} className={inputClass}>
                             <option value="id_front">ID Front</option>
                             <option value="id_back">ID Back</option>
@@ -102,15 +102,15 @@ function KycSection({ kycDocuments }) {
                         </select>
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-1">Upload file</label>
-                        <input type="file" accept="image/*,.pdf" onChange={(e) => setData('document', e.target.files[0])} className="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:bg-teal-50 file:text-teal-700" />
+                        <label className="block text-sm font-medium text-slate-300 mb-1">Upload file</label>
+                        <input type="file" accept="image/*,.pdf" onChange={(e) => setData('document', e.target.files[0])} className="block w-full text-sm text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:bg-amber-500/10 file:text-amber-300" />
                     </div>
                     <Button type="submit" variant="primary" disabled={processing}>Upload</Button>
                 </form>
                 {kycDocuments?.length > 0 && (
-                    <div className="mt-4 pt-4 border-t border-slate-100">
-                        <p className="text-sm font-medium text-slate-700 mb-2">Uploaded</p>
-                        <ul className="space-y-1 text-sm text-slate-600">
+                    <div className="mt-4 pt-4 border-t border-amber-500/15">
+                        <p className="text-sm font-medium text-slate-300 mb-2">Uploaded</p>
+                        <ul className="space-y-1 text-sm text-slate-300">
                             {kycDocuments.map((doc) => (
                                 <li key={doc.id}>{doc.document_type} — {doc.status}</li>
                             ))}
@@ -121,3 +121,6 @@ function KycSection({ kycDocuments }) {
         </Card>
     );
 }
+
+
+

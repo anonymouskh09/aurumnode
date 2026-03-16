@@ -1,13 +1,13 @@
 export default function Badge({ variant = 'default', children, className = '' }) {
     const base = 'inline-flex items-center px-2.5 py-0.5 rounded-lg text-xs font-medium';
     const variants = {
-        default: 'bg-teal-50 text-teal-700 border border-teal-200',
-        success: 'bg-green-50 text-green-700 border border-green-200',
-        warning: 'bg-amber-50 text-amber-700 border border-amber-200',
-        danger: 'bg-red-50 text-red-700 border border-red-200',
-        paid: 'bg-green-50 text-green-700 border border-green-200',
-        pending: 'bg-amber-50 text-amber-700 border border-amber-200',
-        rejected: 'bg-red-50 text-red-700 border border-red-200',
+        default: 'bg-amber-500/12 text-amber-200 border border-amber-500/30',
+        success: 'bg-green-500/12 text-green-200 border border-green-500/30',
+        warning: 'bg-amber-500/12 text-amber-200 border border-amber-500/30',
+        danger: 'bg-red-500/12 text-red-200 border border-red-500/30',
+        paid: 'bg-green-500/12 text-green-200 border border-green-500/30',
+        pending: 'bg-amber-500/12 text-amber-200 border border-amber-500/30',
+        rejected: 'bg-red-500/12 text-red-200 border border-red-500/30',
     };
     return (
         <span className={`${base} ${variants[variant] || variants.default} ${className}`}>

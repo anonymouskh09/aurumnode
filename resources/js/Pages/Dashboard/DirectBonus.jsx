@@ -35,20 +35,20 @@ export default function DirectBonus({ logs, totalEarned, balance }) {
                         <TableBody>
                             {logs?.length ? (
                                 logs.map((log, i) => (
-                                    <TableRow key={log.id} className={i % 2 === 1 ? 'bg-slate-50/50' : ''}>
-                                        <Td className="text-slate-600">
+                                    <TableRow key={log.id} className={i % 2 === 1 ? 'bg-[#1f2231]' : ''}>
+                                        <Td className="text-slate-300">
                                             {new Date(log.created_at).toLocaleDateString()}
                                         </Td>
                                         <Td>
                                             <span className="font-medium">{log.from_user?.name ?? '—'}</span>
                                             {log.from_user?.username && (
-                                                <span className="text-slate-500 ml-1">@{log.from_user.username}</span>
+                                                <span className="text-slate-400 ml-1">@{log.from_user.username}</span>
                                             )}
                                         </Td>
                                         <Td align="right" className="font-semibold text-green-600">
                                             +${parseFloat(log.amount).toFixed(2)}
                                         </Td>
-                                        <Td align="right" className="text-slate-500">{log.percent}%</Td>
+                                        <Td align="right" className="text-slate-400">{log.percent}%</Td>
                                     </TableRow>
                                 ))
                             ) : (
@@ -61,3 +61,6 @@ export default function DirectBonus({ logs, totalEarned, balance }) {
         </DashboardLayout>
     );
 }
+
+
+

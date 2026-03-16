@@ -47,8 +47,8 @@ export default function BinaryBonus({ logs, totalEarned, balance, leftTotal, rig
                         <TableBody>
                             {logs?.length ? (
                                 logs.map((log, i) => (
-                                    <TableRow key={log.id} className={i % 2 === 1 ? 'bg-slate-50/50' : ''}>
-                                        <Td className="text-slate-600">
+                                    <TableRow key={log.id} className={i % 2 === 1 ? 'bg-[#1f2231]' : ''}>
+                                        <Td className="text-slate-300">
                                             {new Date(log.date).toLocaleDateString()}
                                         </Td>
                                         <Td align="right">${parseFloat(log.left_points).toLocaleString(undefined, { minimumFractionDigits: 2 })}</Td>
@@ -70,3 +70,6 @@ export default function BinaryBonus({ logs, totalEarned, balance, leftTotal, rig
         </DashboardLayout>
     );
 }
+
+
+

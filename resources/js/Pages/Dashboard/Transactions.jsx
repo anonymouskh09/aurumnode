@@ -42,13 +42,13 @@ export default function Transactions({ transactions }) {
                         <TableBody>
                             {transactions?.length ? (
                                 transactions.map((t, i) => (
-                                    <TableRow key={t.id} className={i % 2 === 1 ? 'bg-slate-50/50' : ''}>
+                                    <TableRow key={t.id} className={i % 2 === 1 ? 'bg-[#1f2231]' : ''}>
                                         <Td className="font-medium">{prettyType(t.type)}</Td>
-                                        <Td className="text-slate-600">{detailText(t)}</Td>
+                                        <Td className="text-slate-300">{detailText(t)}</Td>
                                         <Td align="right" className={parseFloat(t.amount) >= 0 ? 'text-green-600 font-medium' : 'text-red-600 font-medium'}>
                                             {parseFloat(t.amount) >= 0 ? '+' : ''}${parseFloat(t.amount).toFixed(2)}
                                         </Td>
-                                        <Td className="text-slate-500">{new Date(t.created_at).toLocaleString()}</Td>
+                                        <Td className="text-slate-400">{new Date(t.created_at).toLocaleString()}</Td>
                                     </TableRow>
                                 ))
                             ) : (
@@ -61,3 +61,6 @@ export default function Transactions({ transactions }) {
         </DashboardLayout>
     );
 }
+
+
+

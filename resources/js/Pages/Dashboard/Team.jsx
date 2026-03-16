@@ -20,8 +20,8 @@ export default function Team({ team }) {
                         <TableBody>
                             {team?.length ? (
                                 team.map((member, i) => (
-                                    <TableRow key={member.id} className={i % 2 === 1 ? 'bg-slate-50/50' : ''}>
-                                        <Td className="font-medium text-slate-900">{member.name}</Td>
+                                    <TableRow key={member.id} className={i % 2 === 1 ? 'bg-[#1f2231]' : ''}>
+                                        <Td className="font-medium text-slate-100">{member.name}</Td>
                                         <Td>@{member.username}</Td>
                                         <Td>{member.latest_package?.name ?? '—'}</Td>
                                         <Td>{member.created_at ? new Date(member.created_at).toLocaleDateString() : '—'}</Td>
@@ -42,3 +42,6 @@ export default function Team({ team }) {
         </DashboardLayout>
     );
 }
+
+
+

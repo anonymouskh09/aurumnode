@@ -11,19 +11,19 @@ export default function Packages({ packages, deposit_balance_usdt, withdrawal_ba
     return (
         <DashboardLayout title="Packages">
             <div className="mb-6 space-y-4">
-                <Card className="border-teal-200 bg-teal-50/50">
+                <Card className="border-amber-500/30 bg-amber-500/10">
                     <CardBody className="flex flex-row items-center gap-3">
-                        <Wallet className="w-8 h-8 text-teal-600 shrink-0" />
+                        <Wallet className="w-8 h-8 text-amber-300 shrink-0" />
                         <div className="flex-1">
-                            <p className="font-semibold text-slate-900">Deposit Wallet: ${depositBalance.toFixed(2)} USDT</p>
-                            <p className="text-sm text-slate-600">Withdrawal Wallet: ${withdrawalBalance.toFixed(2)} USDT</p>
-                            <p className="text-sm text-slate-500 mt-1">Pay for packages from either wallet.</p>
+                            <p className="font-semibold text-slate-100">Deposit Wallet: ${depositBalance.toFixed(2)} USDT</p>
+                            <p className="text-sm text-slate-300">Withdrawal Wallet: ${withdrawalBalance.toFixed(2)} USDT</p>
+                            <p className="text-sm text-slate-400 mt-1">Pay for packages from either wallet.</p>
                         </div>
                     </CardBody>
                 </Card>
-                <Card className="border-amber-200 bg-amber-50/50">
+                <Card className="border-amber-500/30 bg-amber-500/10">
                     <CardBody>
-                        <p className="text-sm font-medium text-amber-800 mb-2">Demo: Add to Deposit Wallet</p>
+                        <p className="text-sm font-medium text-amber-200 mb-2">Demo: Add to Deposit Wallet</p>
                         <DemoDepositForm />
                     </CardBody>
                 </Card>
@@ -54,7 +54,7 @@ function DemoDepositForm() {
             className="flex flex-wrap items-end gap-2"
         >
             <div className="min-w-[120px]">
-                <label className="block text-xs text-slate-600 mb-1">Amount (USDT)</label>
+                <label className="block text-xs text-slate-300 mb-1">Amount (USDT)</label>
                 <input
                     type="number"
                     step="1"
@@ -62,7 +62,7 @@ function DemoDepositForm() {
                     max="100000"
                     value={data.amount}
                     onChange={(e) => setData('amount', e.target.value)}
-                    className="block w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                    className="block w-full rounded-lg border border-amber-500/20 px-3 py-2 text-sm"
                 />
             </div>
             <Button type="submit" variant="primary" disabled={processing}>
@@ -87,32 +87,32 @@ function PackageCard({ pkg, depositBalance, withdrawalBalance, highestPurchasedA
     return (
         <Card className="overflow-hidden transition-all duration-200 hover:shadow-md hover:-translate-y-0.5">
             <div className="p-6">
-                <div className="w-12 h-12 rounded-2xl bg-teal-50 flex items-center justify-center text-teal-600 mb-4">
+                <div className="w-12 h-12 rounded-2xl bg-amber-500/10 flex items-center justify-center text-amber-300 mb-4">
                     <Package className="w-6 h-6" />
                 </div>
-                <h3 className="text-lg font-semibold text-slate-900">{pkg.display_name ?? pkg.name}</h3>
-                <p className="text-2xl font-bold text-teal-600 mt-2">${price.toFixed(2)} USDT</p>
-                <p className="text-sm text-slate-500 mt-1">Status: {pkg.status ?? 'active'}</p>
+                <h3 className="text-lg font-semibold text-slate-100">{pkg.display_name ?? pkg.name}</h3>
+                <p className="text-2xl font-bold text-amber-300 mt-2">${price.toFixed(2)} USDT</p>
+                <p className="text-sm text-slate-400 mt-1">Status: {pkg.status ?? 'active'}</p>
                 {blockedByUpgradeRule ? (
                     <p className="text-sm text-rose-600 mt-1">
                         Blocked: lower than your highest package (${highestPurchasedAmount.toFixed(2)}).
                     </p>
                 ) : (
-                    <p className="text-sm text-emerald-600 mt-1">Available for purchase.</p>
+                    <p className="text-sm text-amber-300 mt-1">Available for purchase.</p>
                 )}
                 <div className="mt-3">
-                    <label className="block text-xs font-medium text-slate-600 mb-1">Pay from</label>
+                    <label className="block text-xs font-medium text-slate-300 mb-1">Pay from</label>
                     <select
                         value={data.pay_from}
                         onChange={(e) => setData('pay_from', e.target.value)}
-                        className="block w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                        className="block w-full rounded-lg border border-amber-500/20 px-3 py-2 text-sm"
                     >
                         <option value="deposit_wallet">Deposit Wallet (${depositBalance.toFixed(2)})</option>
                         <option value="withdrawal_wallet">Withdrawal Wallet (${withdrawalBalance.toFixed(2)})</option>
                     </select>
                 </div>
                 {!canAfford && price > 0 && (
-                    <p className="text-sm text-amber-600 mt-2">
+                    <p className="text-sm text-amber-300 mt-2">
                         Insufficient balance. Need ${price.toFixed(2)} in {data.pay_from === 'withdrawal_wallet' ? 'Withdrawal' : 'Deposit'} Wallet.
                     </p>
                 )}
@@ -141,3 +141,7 @@ function PackageCard({ pkg, depositBalance, withdrawalBalance, highestPurchasedA
         </Card>
     );
 }
+
+
+
+

@@ -3,7 +3,7 @@ import DashboardLayout from '@/Components/DashboardLayout';
 import { Card, CardHeader, CardBody, Button } from '@/Components/ui';
 import { Lock } from 'lucide-react';
 
-const inputClass = 'block w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm focus:border-teal-500 focus:ring-1 focus:ring-teal-500';
+const inputClass = 'block w-full rounded-xl border border-amber-500/20 px-4 py-2.5 text-sm focus:border-amber-500 focus:ring-1 focus:ring-amber-500';
 
 const EARNINGS_WALLETS = [
     { key: 'direct_bonus_wallet', label: 'Direct Bonus' },
@@ -31,12 +31,12 @@ export default function Transfers({ wallet }) {
         <DashboardLayout title="Fund Transfers">
             <div className="max-w-2xl space-y-6">
                 {investmentBalance > 0 && (
-                    <Card className="bg-amber-50/50 border-amber-200" title="Investment locked. Withdrawal not available.">
+                    <Card className="bg-amber-500/10 border-amber-500/30" title="Investment locked. Withdrawal not available.">
                         <CardBody className="flex items-center gap-3">
-                            <Lock className="w-6 h-6 text-amber-600 shrink-0" />
+                            <Lock className="w-6 h-6 text-amber-300 shrink-0" />
                             <div>
-                                <p className="font-medium text-slate-800">Locked Investment: ${investmentBalance.toFixed(2)}</p>
-                                <p className="text-sm text-slate-600">Investment locked. Withdrawal not available.</p>
+                                <p className="font-medium text-slate-200">Locked Investment: ${investmentBalance.toFixed(2)}</p>
+                                <p className="text-sm text-slate-300">Investment locked. Withdrawal not available.</p>
                             </div>
                         </CardBody>
                     </Card>
@@ -52,7 +52,7 @@ export default function Transfers({ wallet }) {
                             className="space-y-4"
                         >
                             <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-1">From</label>
+                                <label className="block text-sm font-medium text-slate-300 mb-1">From</label>
                                 <select
                                     value={transferToWithdrawal.data.from}
                                     onChange={(e) => transferToWithdrawal.setData('from', e.target.value)}
@@ -66,7 +66,7 @@ export default function Transfers({ wallet }) {
                                 </select>
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-1">Amount (USDT)</label>
+                                <label className="block text-sm font-medium text-slate-300 mb-1">Amount (USDT)</label>
                                 <input
                                     type="number"
                                     step="0.01"
@@ -86,7 +86,7 @@ export default function Transfers({ wallet }) {
                 <Card>
                     <CardHeader title="Transfer to another user (USDT)" subtitle="Only from Withdrawal Wallet. Recipient receives in Deposit Wallet." />
                     <CardBody>
-                        <p className="text-sm text-slate-600 mb-4">Available: <strong>${getBalance('withdrawal_wallet')}</strong> (Withdrawal Wallet)</p>
+                        <p className="text-sm text-slate-300 mb-4">Available: <strong>${getBalance('withdrawal_wallet')}</strong> (Withdrawal Wallet)</p>
                         <form
                             onSubmit={(e) => {
                                 e.preventDefault();
@@ -95,7 +95,7 @@ export default function Transfers({ wallet }) {
                             className="space-y-4"
                         >
                             <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-1">Recipient username</label>
+                                <label className="block text-sm font-medium text-slate-300 mb-1">Recipient username</label>
                                 <input
                                     type="text"
                                     value={transferToUser.data.to_username}
@@ -105,7 +105,7 @@ export default function Transfers({ wallet }) {
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-1">Amount (USDT)</label>
+                                <label className="block text-sm font-medium text-slate-300 mb-1">Amount (USDT)</label>
                                 <input
                                     type="number"
                                     step="0.01"
@@ -125,3 +125,7 @@ export default function Transfers({ wallet }) {
         </DashboardLayout>
     );
 }
+
+
+
+

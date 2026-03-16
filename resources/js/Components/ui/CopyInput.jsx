@@ -15,13 +15,13 @@ export default function CopyInput({ value, label }) {
 
     return (
         <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-            {label && <span className="text-sm font-medium text-slate-600 w-16 shrink-0">{label}</span>}
+            {label && <span className="text-sm font-medium text-slate-300 w-16 shrink-0">{label}</span>}
             <div className="flex-1 min-w-0 flex gap-2">
                 <input
                     type="text"
                     readOnly
                     value={value ?? '-'}
-                    className="flex-1 min-w-0 px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl text-slate-700 truncate"
+                    className="flex-1 min-w-0 px-3 py-2 text-sm bg-[#1a1c28] border border-amber-500/25 rounded-xl text-slate-200 truncate"
                 />
                 <Button
                     variant="primary"

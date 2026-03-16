@@ -40,15 +40,15 @@ export default function Roi({ logs, totalEarned, balance, totalRoiReceived }) {
                         <TableBody>
                             {logs?.length ? (
                                 logs.map((log, i) => (
-                                    <TableRow key={log.id} className={i % 2 === 1 ? 'bg-slate-50/50' : ''}>
-                                        <Td className="text-slate-600">
+                                    <TableRow key={log.id} className={i % 2 === 1 ? 'bg-[#1f2231]' : ''}>
+                                        <Td className="text-slate-300">
                                             {new Date(log.date).toLocaleDateString()}
                                         </Td>
                                         <Td>{log.user_package?.package?.name ?? '—'}</Td>
                                         <Td align="right" className="font-semibold text-green-600">
                                             +${parseFloat(log.amount).toFixed(2)}
                                         </Td>
-                                        <Td align="right" className="text-slate-500">
+                                        <Td align="right" className="text-slate-400">
                                             {log.rate ? `${(parseFloat(log.rate) * 100).toFixed(2)}%` : '—'}
                                         </Td>
                                     </TableRow>
@@ -63,3 +63,6 @@ export default function Roi({ logs, totalEarned, balance, totalRoiReceived }) {
         </DashboardLayout>
     );
 }
+
+
+
