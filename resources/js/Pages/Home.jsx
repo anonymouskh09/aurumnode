@@ -159,19 +159,19 @@ export default function Home() {
                             Community Powered Ecosystem
                         </p>
                         <h1 className="aurum-title-glow aurum-fade-up aurum-fade-up-delay-1 mx-auto mb-7 max-w-5xl text-4xl font-semibold leading-tight md:text-6xl">
-                            The Future of Community-Powered Opportunity Networks
+                            Next-Generation Digital Opportunity Network
                         </h1>
                         <p className="aurum-fade-up aurum-fade-up-delay-2 mx-auto mb-4 max-w-4xl text-base leading-8 text-slate-200">
-                            Aurum Node is a modern digital ecosystem where technology, global markets, and community participation come together to unlock new financial opportunities.
+                            Aurum Node is a global ecosystem where technology, markets, and community collaboration converge to create scalable digital opportunities.
                         </p>
                         <p className="mx-auto mb-4 max-w-4xl text-base leading-8 text-slate-200">
-                            Through a diversified strategy spanning Forex markets, digital assets, physical mining, artificial intelligence, real estate, and computing infrastructure, Aurum Node creates a dynamic environment designed for scalable growth.
+                            By integrating Forex markets, digital assets, AI infrastructure, mining, real estate, and computing power, Aurum Node builds a diversified platform designed for long-term ecosystem growth.
                         </p>
                         <p className="mx-auto mb-8 max-w-4xl text-base leading-8 text-slate-200">
-                            Members participate in a collaborative network that combines ecosystem rewards with community expansion opportunities, creating a powerful system designed for sustainable development.
+                            Members participate in a collaborative network that rewards engagement while supporting the expansion of a global digital economy.
                         </p>
                         <p className="mx-auto mb-8 max-w-4xl text-base leading-8 text-slate-200">
-                            Join Aurum Node and become part of the next generation of digital opportunity networks.
+                            Join Aurum Node and participate in the future of community-driven ecosystems.
                         </p>
                         <div className="aurum-fade-up aurum-fade-up-delay-3 flex flex-wrap items-center justify-center gap-3">
                             <Link
@@ -247,7 +247,7 @@ export default function Home() {
                         </div>
                         <div className="overflow-hidden rounded-2xl border border-amber-500/30">
                             <img
-                                src="/images/sections/about-ecosystem.jpg"
+                                src="/images/sections/image10.jpeg"
                                 alt="About Aurum Node ecosystem"
                                 className="h-full min-h-[260px] w-full object-cover"
                                 loading="lazy"
@@ -264,9 +264,9 @@ export default function Home() {
                     </p>
                     <div className="mb-8 overflow-hidden rounded-2xl border border-amber-500/30">
                         <img
-                            src="/images/sections/how-it-works.jpg"
+                            src="/images/sections/image3.jpeg"
                             alt="How Aurum Node works illustration"
-                            className="h-[240px] w-full object-cover object-[center_-0%] md:h-[300px]"
+                            className="h-[340px] w-full object-cover object-[center_10%] md:h-[500px]"
                             loading="lazy"
                         />
                     </div>
@@ -293,7 +293,7 @@ export default function Home() {
                         </p>
                         <div className="mb-8 overflow-hidden rounded-2xl border border-amber-500/30">
                             <img
-                                src="/images/sections/opportunity-sectors.jpg"
+                                src="/images/sections/image8.jpeg"
                                 alt="Global opportunity sectors"
                                 className="h-[240px] w-full object-cover md:h-[300px]"
                                 loading="lazy"
@@ -323,7 +323,7 @@ export default function Home() {
                     <div className="grid gap-5 md:grid-cols-2">
                         <div className="aurum-card rounded-xl p-6">
                             <img
-                                src="/images/sections/member-growth.jpg"
+                                src="/images/sections/image1.jpeg"
                                 alt="Participation rewards"
                                 className="mb-4 h-40 w-full rounded-lg object-cover"
                                 loading="lazy"
@@ -338,7 +338,7 @@ export default function Home() {
                         </div>
                         <div className="aurum-card rounded-xl p-6">
                             <img
-                                src="/images/sections/member-growth.jpg"
+                                src="/images/sections/image2.jpeg"
                                 alt="Network growth rewards"
                                 className="mb-4 h-40 w-full rounded-lg object-cover"
                                 loading="lazy"
@@ -393,7 +393,7 @@ export default function Home() {
                         </div>
                         <div className="overflow-hidden rounded-2xl border border-amber-500/30">
                             <img
-                                src="/images/sections/growth-vision.jpg"
+                                src="/images/sections/image6.jpeg"
                                 alt="Ecosystem growth vision"
                                 className="h-full min-h-[260px] w-full object-cover"
                                 loading="lazy"

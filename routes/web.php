@@ -4,6 +4,7 @@ use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\NewPasswordController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
 use App\Http\Controllers\Auth\RegisteredUserController;
+use App\Http\Controllers\ContactController;
 use App\Http\Controllers\Dashboard\DashboardController;
 use App\Http\Controllers\Dashboard\PackageController;
 use App\Http\Controllers\Dashboard\ProfileController;
@@ -31,7 +32,8 @@ Route::get('/risk-disclosure', fn () => Inertia::render('LegalCompliance'))->nam
 Route::get('/acceptable-use-policy', fn () => Inertia::render('AcceptableUsePolicy'))->name('acceptable-use-policy');
 Route::get('/kyc-policy', fn () => Inertia::render('KycPolicy'))->name('kyc-policy');
 Route::get('/aml-policy', fn () => Inertia::render('AmlPolicy'))->name('aml-policy');
-Route::get('/contact', fn () => Inertia::render('Contact'))->name('contact');
+Route::get('/contact', [ContactController::class, 'index'])->name('contact');
+Route::post('/contact', [ContactController::class, 'store'])->name('contact.store');
 
 // Auth
 Route::middleware('guest')->group(function () {

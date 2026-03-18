@@ -1,12 +1,15 @@
 import { Link, useForm } from '@inertiajs/react';
 import { useEffect } from 'react';
-import { ArrowRight, KeyRound, Mail, User, UserPlus, Users } from 'lucide-react';
+import { ArrowRight, KeyRound, Mail, Phone, User, UserPlus, Users } from 'lucide-react';
+import PhoneInput from 'react-phone-input-2';
+import 'react-phone-input-2/lib/style.css';
 
 export default function Register({ referralUsername, referralSide, errors: serverErrors }) {
     const { data, setData, post, processing, errors } = useForm({
         name: '',
         username: '',
         email: '',
+        mobile: '',
         password: '',
         password_confirmation: '',
         sponsor_username: referralUsername || '',
@@ -148,6 +151,53 @@ export default function Register({ referralUsername, referralSide, errors: serve
                                     className="w-full rounded-xl border border-amber-500/30 bg-[#1a1c28]/60 px-4 py-2.5 text-slate-100 outline-none transition focus:border-amber-400 focus:ring-2 focus:ring-amber-500/20"
                                 />
                                 {err('email') && <p className="mt-1 text-sm text-red-300">{err('email')}</p>}
+                            </div>
+
+                            <div>
+                                <label htmlFor="mobile" className="mb-2 flex items-center gap-2 text-sm text-slate-200">
+                                    <Phone className="h-4 w-4 text-amber-300" />
+                                    Mobile number
+                                </label>
+                                <PhoneInput
+                                    country="pk"
+                                    value={String(data.mobile || '').replace(/^\+/, '')}
+                                    onChange={(value) => setData('mobile', value ? `+${value}` : '')}
+                                    enableSearch
+                                    countryCodeEditable={false}
+                                    excludeCountries={['ae', 'us', 'ir', 'af', 'sd', 'ca', 'ly']}
+                                    inputProps={{
+                                        id: 'mobile',
+                                        name: 'mobile',
+                                    }}
+                                    containerStyle={{ width: '100%' }}
+                                    inputStyle={{
+                                        width: '100%',
+                                        height: '44px',
+                                        borderRadius: '0.75rem',
+                                        border: '1px solid rgba(245, 158, 11, 0.30)',
+                                        background: 'rgba(26, 28, 40, 0.6)',
+                                        color: '#f1f5f9',
+                                        fontSize: '14px',
+                                    }}
+                                    buttonStyle={{
+                                        border: '1px solid rgba(245, 158, 11, 0.30)',
+                                        borderRight: 'none',
+                                        background: 'rgba(26, 28, 40, 0.6)',
+                                        borderTopLeftRadius: '0.75rem',
+                                        borderBottomLeftRadius: '0.75rem',
+                                    }}
+                                    dropdownStyle={{
+                                        background: '#1f2231',
+                                        color: '#f1f5f9',
+                                        border: '1px solid rgba(245, 158, 11, 0.25)',
+                                    }}
+                                    searchStyle={{
+                                        background: '#1a1c28',
+                                        color: '#f1f5f9',
+                                        border: '1px solid rgba(245, 158, 11, 0.25)',
+                                    }}
+                                />
+                                {err('mobile') && <p className="mt-1 text-sm text-red-300">{err('mobile')}</p>}
                             </div>
 
                             <div className="grid gap-5 md:grid-cols-2">

@@ -78,7 +78,6 @@ export default function DashboardLayout({ children, title }) {
     const { auth } = usePage();
     const user = auth?.user;
     const pathname = typeof window !== 'undefined' ? window.location.pathname : '';
-    const sponsorName = user?.sponsor?.name ?? 'None';
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
     return (
@@ -139,9 +138,6 @@ export default function DashboardLayout({ children, title }) {
                         <h1 className="text-lg sm:text-2xl font-semibold text-slate-100 truncate">{title}</h1>
                     </div>
                     <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0">
-                        <span className="hidden sm:inline-flex items-center px-2 sm:px-3 py-1 rounded-lg bg-amber-500/12 text-amber-200 text-xs sm:text-sm border border-amber-500/30 truncate max-w-[120px] sm:max-w-none" title={sponsorName}>
-                            Sponsor: {sponsorName}
-                        </span>
                         {user?.is_admin && (
                             <Link href="/admin">
                                 <Button variant="outline" className="text-xs sm:text-sm py-1.5 sm:py-2">Admin</Button>

@@ -8,7 +8,7 @@ export default function WalletCard({ label, value, subtitle, icon: Icon, classNa
                 <div className="min-w-0 flex-1">
                     <p className="text-sm font-medium text-slate-300">{label}</p>
                     {subtitle && <p className="text-xs text-slate-400">{subtitle}</p>}
-                    <p className="text-xl font-bold text-slate-100 mt-1">${parseFloat(value ?? 0).toFixed(2)}</p>
+                    <p className="text-xl font-bold text-emerald-400 mt-1">${parseFloat(value ?? 0).toFixed(2)}</p>
                 </div>
             </div>
         </div>

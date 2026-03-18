@@ -17,6 +17,7 @@ import {
     DollarSign,
     PiggyBank,
     Lock,
+    ArrowUpRight,
     ChevronDown,
     ChevronUp,
 } from 'lucide-react';
@@ -41,6 +42,7 @@ export default function DashboardIndex({
     totalEarningsFromPackages = 0,
     investmentBalance,
     earningsBalance,
+    withdrawnOutAmount = 0,
 }) {
     const totalEarned = parseFloat(wallet?.total_bonus ?? 0) + parseFloat(wallet?.total_roi ?? 0);
     const inv = parseFloat(totalInvestment ?? 0);
@@ -51,7 +53,7 @@ export default function DashboardIndex({
 
     const walletCards = [
         { key: 'deposit_wallet', label: 'Deposit Wallet (USDT)', subtitle: 'Use for packages or transfer to users', locked: false },
-        { key: 'investment_wallet', label: 'Locked Investment', subtitle: 'Withdrawal not available', locked: true },
+        { key: 'investment_wallet', label: 'My Package', subtitle: 'Withdrawal not available', locked: true },
         { key: 'withdrawal_wallet', label: 'Withdrawal Wallet', subtitle: 'Ready to withdraw', locked: false },
         { key: 'direct_bonus_wallet', label: 'Direct Bonus', subtitle: '10% from referrals', locked: false },
         { key: 'binary_bonus_wallet', label: 'Binary Bonus', subtitle: 'Daily matching bonus', locked: false },
@@ -72,15 +74,14 @@ export default function DashboardIndex({
             <div className="space-y-8">
                 {/* Deposit / Investment Section */}
                 <section>
-                    <h2 className="text-lg font-semibold text-slate-100 mb-4">Deposit / Investment (USDT)</h2>
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
                         <Card className="border-2 border-amber-500/25 bg-[#1f2231]">
                             <CardBody className="flex flex-col">
                                 <div className="flex items-center gap-2 text-amber-200">
                                     <Wallet className="w-5 h-5 shrink-0" />
                                     <span className="font-semibold">Deposit Wallet (USDT)</span>
                                 </div>
-                                <p className="text-2xl font-bold text-slate-100 mt-2">${Number(wallet?.deposit_wallet ?? 0).toFixed(2)}</p>
+                                <p className="text-2xl font-bold text-emerald-400 mt-2">${Number(wallet?.deposit_wallet ?? 0).toFixed(2)}</p>
                                 <p className="text-sm text-slate-300 mt-1">Use for packages or transfer to other users.</p>
                                 <Link href="/dashboard/transfers" className="mt-3">
                                     <Button variant="primary" size="sm">Transfer to user</Button>
@@ -91,9 +92,9 @@ export default function DashboardIndex({
                             <CardBody className="flex flex-col">
                                 <div className="flex items-center gap-2 text-amber-200">
                                     <Lock className="w-5 h-5 shrink-0" />
-                                    <span className="font-semibold">Locked Investment</span>
+                                    <span className="font-semibold">My Package</span>
                                 </div>
-                                <p className="text-2xl font-bold text-slate-100 mt-2">${Number(investmentBalance ?? 0).toFixed(2)}</p>
+                                <p className="text-2xl font-bold text-emerald-400 mt-2">${Number(investmentBalance ?? 0).toFixed(2)}</p>
                                 <div className="mt-3 flex items-center gap-2 text-sm text-amber-300" title="Investment locked. Withdrawal not available.">
                                     <Lock className="w-4 h-4" />
                                     <span>Withdraw disabled</span>
@@ -106,11 +107,21 @@ export default function DashboardIndex({
                                     <PiggyBank className="w-5 h-5 shrink-0" />
                                     <span className="font-semibold">Earnings (Withdrawable)</span>
                                 </div>
-                                <p className="text-2xl font-bold text-slate-100 mt-2">${Number(earningsBalance ?? 0).toFixed(2)}</p>
-                                <p className="text-sm text-slate-300 mt-1">Transfer to Withdrawal Wallet to request payout.</p>
+                                <p className="text-2xl font-bold text-emerald-400 mt-2">${Number(earningsBalance ?? 0).toFixed(2)}</p>
+                                <p className="text-sm text-slate-300 mt-1">Includes earnings wallets and Withdrawal Wallet balance.</p>
                                 <Link href="/dashboard/transfers" className="mt-3">
                                     <Button variant="primary" size="sm">Transfer to withdrawal</Button>
                                 </Link>
+                            </CardBody>
+                        </Card>
+                        <Card className="border-2 border-rose-500/35 bg-[#1f2231]">
+                            <CardBody className="flex flex-col">
+                                <div className="flex items-center gap-2 text-rose-300">
+                                    <ArrowUpRight className="w-5 h-5 shrink-0" />
+                                    <span className="font-semibold">Total Withdrawn / Sent</span>
+                                </div>
+                                <p className="text-2xl font-bold text-rose-400 mt-2">${Number(withdrawnOutAmount ?? 0).toFixed(2)}</p>
+                                <p className="text-sm text-slate-300 mt-1">From Withdrawal Wallet (user transfers + withdrawal requests).</p>
                             </CardBody>
                         </Card>
                     </div>
@@ -146,7 +157,7 @@ export default function DashboardIndex({
                                                 </div>
                                                 <div className="min-w-[200px]">
                                                     <p className="text-sm text-slate-400 mb-1">Cap progress (4X)</p>
-                                                    <p className="text-lg font-semibold">${Number(p.total_earnings).toFixed(2)} / ${Number(p.cap).toFixed(2)}</p>
+                                                    <p className="text-lg font-semibold text-emerald-400">${Number(p.total_earnings).toFixed(2)} / ${Number(p.cap).toFixed(2)}</p>
                                                     <ProgressBar value={p.total_earnings} max={p.cap || 1} showLabel className="mt-2" />
                                                 </div>
                                             </div>
@@ -157,7 +168,7 @@ export default function DashboardIndex({
                                     <CardBody>
                                         <p className="text-sm text-slate-300 mb-1">Total (all packages)</p>
                                         <p className="text-xl font-bold text-slate-100">
-                                            Earned: ${Number(totalEarningsFromCap).toFixed(2)} / Cap: ${Number(cap).toFixed(2)} • Remaining: ${remaining.toFixed(2)}
+                                            Earned: <span className="text-emerald-400">${Number(totalEarningsFromCap).toFixed(2)}</span> / Cap: <span className="text-emerald-400">${Number(cap).toFixed(2)}</span> • Remaining: <span className="text-emerald-400">${remaining.toFixed(2)}</span>
                                         </p>
                                         <ProgressBar value={totalEarningsFromCap} max={cap || 1} showLabel className="mt-2" />
                                     </CardBody>

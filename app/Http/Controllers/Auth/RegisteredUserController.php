@@ -76,6 +76,7 @@ class RegisteredUserController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'username' => ['required', 'string', 'max:255', 'unique:users,username', 'alpha_dash'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:users,email'],
+            'mobile' => ['nullable', 'string', 'max:30', 'regex:/^\+\d{6,20}$/', 'unique:users,mobile'],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
         ]);
 
@@ -83,6 +84,7 @@ class RegisteredUserController extends Controller
             'name' => $validated['name'],
             'username' => $validated['username'],
             'email' => $validated['email'],
+            'mobile' => $validated['mobile'] ?? null,
             'password' => Hash::make($validated['password']),
             'sponsor_id' => $sponsor?->id,
             'placement_side' => $placementSide,

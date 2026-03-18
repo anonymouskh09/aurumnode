@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Dashboard;
 
 use App\Http\Controllers\Controller;
+use App\Models\Transaction;
 use App\Services\EarningsService;
 use App\Services\WalletService;
 use Illuminate\Http\Request;
@@ -61,8 +62,19 @@ class DashboardController extends Controller
         }
 
         $earningsBalance = (float) $wallet->direct_bonus_wallet + (float) $wallet->binary_bonus_wallet
-            + (float) $wallet->roi_wallet + (float) $wallet->rank_award_wallet;
+            + (float) $wallet->roi_wallet + (float) $wallet->rank_award_wallet
+            + (float) $wallet->withdrawal_wallet;
         $investmentBalance = (float) ($wallet->investment_wallet ?? 0);
+        $sentToUsersFromWithdrawal = (float) $user->transactions()
+            ->where('type', Transaction::TYPE_TRANSFER)
+            ->where('amount', '<', 0)
+            ->where('meta_json->from', 'withdrawal_wallet')
+            ->sum('amount');
+        $withdrawalRequestedAmount = (float) $user->transactions()
+            ->where('type', Transaction::TYPE_WITHDRAWAL_REQUEST)
+            ->where('amount', '<', 0)
+            ->sum('amount');
+        $totalWithdrawnOut = abs($sentToUsersFromWithdrawal) + abs($withdrawalRequestedAmount);
 
         $referralLinks = [
             'left' => $baseUrl.'/register?ref='.urlencode($user->username).'&side=left',
@@ -80,6 +92,7 @@ class DashboardController extends Controller
             'totalEarningsFromPackages' => round($totalEarningsFromPackages, 2),
             'investmentBalance' => round($investmentBalance, 2),
             'earningsBalance' => round($earningsBalance, 2),
+            'withdrawnOutAmount' => round($totalWithdrawnOut, 2),
         ]);
     }
 }

@@ -35,12 +35,36 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
+        $user = $request->user();
+
+        if ($user) {
+            $user->loadMissing([
+                'sponsor:id,username,name',
+                'binaryParent:id,username,name',
+            ]);
+
+            $sponsorDisplay = $user->sponsor?->name
+                ?: $user->sponsor?->username
+                ?: $user->binaryParent?->name
+                ?: $user->binaryParent?->username;
+
+            if (! $sponsorDisplay) {
+                $placement = \App\Models\TreePlacement::query()
+                    ->where('new_user_id', $user->id)
+                    ->with('sponsor:id,username,name')
+                    ->latest('id')
+                    ->first();
+
+                $sponsorDisplay = $placement?->sponsor?->name ?: $placement?->sponsor?->username;
+            }
+
+            $user->setAttribute('sponsor_display', $sponsorDisplay ?: null);
+        }
+
         return [
             ...parent::share($request),
             'auth' => [
-                'user' => $request->user()
-                    ? $request->user()->load('sponsor')
-                    : null,
+                'user' => $user,
             ],
             'flash' => [
                 'status' => $request->session()->get('status'),
