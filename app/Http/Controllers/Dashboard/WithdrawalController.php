@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Dashboard;
 
 use App\Http\Controllers\Controller;
+use App\Mail\WithdrawalRequestedMail;
 use App\Models\Setting;
 use App\Models\Transaction;
 use App\Models\Withdrawal;
@@ -12,6 +13,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -98,10 +100,10 @@ class WithdrawalController extends Controller
             return back()->withErrors(['amount' => 'Insufficient balance (amount + '.$feePercent.'% fee).']);
         }
 
-        DB::transaction(function () use ($user, $amount, $feeAmount, $usdtAddress) {
+        $withdrawal = DB::transaction(function () use ($user, $amount, $feeAmount, $usdtAddress) {
             $this->walletService->deductForWithdrawal($user, $amount + $feeAmount);
 
-            $user->withdrawals()->create([
+            $withdrawal = $user->withdrawals()->create([
                 'amount' => $amount,
                 'fee_amount' => $feeAmount,
                 'withdrawal_type' => 'company',
@@ -114,7 +116,11 @@ class WithdrawalController extends Controller
                 'amount' => -($amount + $feeAmount),
                 'meta_json' => ['status' => 'pending', 'fee' => $feeAmount],
             ]);
+
+            return $withdrawal;
         });
+
+        Mail::to($user->email)->send(new WithdrawalRequestedMail($user, $withdrawal));
 
         return back()->with('status', 'Withdrawal request submitted. '.$feeAmount.' USD fee applied.');
     }

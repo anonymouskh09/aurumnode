@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Dashboard;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\UserPackage;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -46,6 +47,102 @@ class BinaryTreeController extends Controller
                 'right_paid' => $rightDirectPaid,
                 'missing_sides' => $missingSides,
             ],
+        ]);
+    }
+
+    public function search(Request $request): JsonResponse
+    {
+        $viewer = $request->user();
+        $q = trim((string) $request->query('q', ''));
+
+        if (mb_strlen($q) < 2) {
+            return response()->json(['items' => []]);
+        }
+
+        $visibleIds = $this->getVisibleBinaryIds($viewer);
+        if ($visibleIds === []) {
+            return response()->json(['items' => []]);
+        }
+
+        $items = User::query()
+            ->select(['id', 'username', 'name', 'status', 'left_points_total', 'right_points_total'])
+            ->whereIn('id', $visibleIds)
+            ->where(function ($query) use ($q) {
+                $query->where('username', 'like', '%'.$q.'%')
+                    ->orWhere('name', 'like', '%'.$q.'%');
+            })
+            ->orderByRaw("CASE WHEN username LIKE ? THEN 0 ELSE 1 END", [$q.'%'])
+            ->orderBy('username')
+            ->limit(15)
+            ->get()
+            ->map(fn (User $u) => [
+                'id' => $u->id,
+                'username' => $u->username,
+                'name' => $u->name,
+                'status' => $u->status,
+                'left_points_total' => (float) $u->left_points_total,
+                'right_points_total' => (float) $u->right_points_total,
+            ])
+            ->values();
+
+        return response()->json(['items' => $items]);
+    }
+
+    public function details(Request $request, User $member): JsonResponse
+    {
+        $viewer = $request->user();
+        $visibleIds = $this->getVisibleBinaryIds($viewer);
+
+        if (! in_array($member->id, $visibleIds, true)) {
+            abort(403);
+        }
+
+        $leftIds = $this->collectBranchIds($member->left_child_id);
+        $rightIds = $this->collectBranchIds($member->right_child_id);
+        $teamIds = array_values(array_unique(array_merge($leftIds, $rightIds)));
+
+        $paidTeamCount = 0;
+        $freeTeamCount = 0;
+        if ($teamIds !== []) {
+            $counts = User::query()
+                ->whereIn('id', $teamIds)
+                ->selectRaw('status, COUNT(*) as total')
+                ->groupBy('status')
+                ->pluck('total', 'status');
+
+            $paidTeamCount = (int) ($counts[User::STATUS_PAID] ?? 0);
+            $freeTeamCount = (int) ($counts[User::STATUS_FREE] ?? 0);
+        }
+
+        $directTotal = (int) $member->referrals()->count();
+        $directPaid = (int) $member->referrals()->where('status', User::STATUS_PAID)->count();
+        $directFree = (int) $member->referrals()->where('status', User::STATUS_FREE)->count();
+        $sponsorUsername = optional($member->sponsor)->username;
+        $binaryParentUsername = optional($member->binaryParent)->username;
+
+        return response()->json([
+            'id' => $member->id,
+            'username' => $member->username,
+            'name' => $member->name,
+            'email' => $member->email,
+            'mobile' => $member->mobile,
+            'country' => $member->country,
+            'city' => $member->city,
+            'placement_side' => $member->placement_side,
+            'status' => $member->status,
+            'sponsor_username' => $sponsorUsername,
+            'binary_parent_username' => $binaryParentUsername,
+            'left_points_total' => (float) $member->left_points_total,
+            'right_points_total' => (float) $member->right_points_total,
+            'total_volume' => (float) $member->left_points_total + (float) $member->right_points_total,
+            'left_team_count' => count($leftIds),
+            'right_team_count' => count($rightIds),
+            'network_total_count' => count($teamIds),
+            'network_paid_count' => $paidTeamCount,
+            'network_free_count' => $freeTeamCount,
+            'direct_total_count' => $directTotal,
+            'direct_paid_count' => $directPaid,
+            'direct_free_count' => $directFree,
         ]);
     }
 
@@ -109,5 +206,37 @@ class BinaryTreeController extends Controller
         }
 
         return $depth;
+    }
+
+    private function getVisibleBinaryIds(User $viewer): array
+    {
+        $descendants = $this->collectBranchIds($viewer->id);
+        $descendants[] = $viewer->id;
+
+        return array_values(array_unique($descendants));
+    }
+
+    private function collectBranchIds(?int $rootId): array
+    {
+        if (! $rootId) {
+            return [];
+        }
+
+        $all = [];
+        $current = [$rootId];
+
+        while ($current !== []) {
+            $all = array_merge($all, $current);
+
+            $children = User::query()
+                ->whereIn('binary_parent_id', $current)
+                ->pluck('id')
+                ->map(fn ($id) => (int) $id)
+                ->all();
+
+            $current = $children;
+        }
+
+        return array_values(array_unique($all));
     }
 }

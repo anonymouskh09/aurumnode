@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Dashboard;
 
 use App\Http\Controllers\Controller;
+use App\Mail\KycSubmittedMail;
 use App\Mail\TransactionPasswordVerifyMail;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -118,11 +119,13 @@ class ProfileController extends Controller
         $file = $request->file('document');
         $path = $file->store('kyc/'.$user->id, 'local');
 
-        $user->kycDocuments()->create([
+        $document = $user->kycDocuments()->create([
             'document_type' => $request->document_type,
             'file_path' => $path,
             'status' => 'pending',
         ]);
+
+        Mail::to($user->email)->send(new KycSubmittedMail($user, $document));
 
         return back()->with('status', 'Document uploaded.');
     }

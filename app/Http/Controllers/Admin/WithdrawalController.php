@@ -3,11 +3,13 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Mail\WithdrawalApprovedMail;
 use App\Models\AuditLog;
 use App\Models\Withdrawal;
 use App\Services\WalletService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -27,6 +29,8 @@ class WithdrawalController extends Controller
         $wallet = $this->walletService->getOrCreateWallet($withdrawal->user);
         $wallet->increment('total_withdrawn', $withdrawal->amount);
         $withdrawal->update(['status' => 'approved']);
+
+        Mail::to($withdrawal->user->email)->send(new WithdrawalApprovedMail($withdrawal->user, $withdrawal));
 
         AuditLog::create(['admin_id' => $request->user()->id, 'action' => 'withdrawal_approved', 'model_type' => Withdrawal::class, 'model_id' => $withdrawal->id]);
 

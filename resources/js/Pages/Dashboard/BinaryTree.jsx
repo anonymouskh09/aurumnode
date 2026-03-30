@@ -1,8 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { router } from '@inertiajs/react';
 import DashboardLayout from '@/Components/DashboardLayout';
 import { Card, CardHeader, CardBody } from '@/Components/ui';
-import { ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Loader2, Search, UserRound, X } from 'lucide-react';
 
 const DEEP_TREE_THRESHOLD = 10;
 const BASE_VERTICAL_GAP = 36;
@@ -12,7 +12,7 @@ function verticalGap(level) {
     return BASE_VERTICAL_GAP + Math.min(level * VERTICAL_GAP_PER_LEVEL, 100);
 }
 
-function TreeNode({ node, level = 0 }) {
+function TreeNode({ node, level = 0, onSelect }) {
     if (!node) return null;
 
     const isPaid = node.status === 'paid';
@@ -22,10 +22,12 @@ function TreeNode({ node, level = 0 }) {
 
     return (
         <div className="flex flex-col items-center" style={{ marginTop: gap }}>
-            <div
+            <button
+                type="button"
+                onClick={() => onSelect?.(node.id)}
                 className={`
                     px-4 py-2.5 rounded-xl border-2 text-sm font-medium min-w-[110px] max-w-[140px] text-center shrink-0
-                    transition-shadow duration-200
+                    transition-shadow duration-200 cursor-pointer
                     ${isRoot
                         ? 'ring-2 ring-amber-200 ring-offset-2 ring-offset-slate-50 shadow-md'
                         : ''
@@ -46,18 +48,18 @@ function TreeNode({ node, level = 0 }) {
                     <span title="Left volume (USDT)">L: ${(node.left_points ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                     <span title="Right volume (USDT)">R: ${(node.right_points ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                 </div>
-            </div>
+            </button>
             {(node.left || node.right) && (
                 <div className="flex gap-16 mt-3">
                     <div className="flex flex-col items-center">
                         <span className="text-[10px] uppercase tracking-wide text-slate-400 font-medium mb-1.5">Left</span>
                         <div className="w-0.5 h-5 bg-slate-300 rounded-full shrink-0" />
-                        <TreeNode node={node.left} level={level + 1} />
+                        <TreeNode node={node.left} level={level + 1} onSelect={onSelect} />
                     </div>
                     <div className="flex flex-col items-center">
                         <span className="text-[10px] uppercase tracking-wide text-slate-400 font-medium mb-1.5">Right</span>
                         <div className="w-0.5 h-5 bg-slate-300 rounded-full shrink-0" />
-                        <TreeNode node={node.right} level={level + 1} />
+                        <TreeNode node={node.right} level={level + 1} onSelect={onSelect} />
                     </div>
                 </div>
             )}
@@ -67,6 +69,60 @@ function TreeNode({ node, level = 0 }) {
 
 export default function BinaryTree({ tree, leftTotal, rightTotal, maxDepth = 0, requestedDepth = 8, hasMore = false, binaryUnlock = null }) {
     const [loadingMore, setLoadingMore] = useState(false);
+    const [query, setQuery] = useState('');
+    const [searching, setSearching] = useState(false);
+    const [results, setResults] = useState([]);
+    const [selected, setSelected] = useState(null);
+    const [modalOpen, setModalOpen] = useState(false);
+    const [detailsLoading, setDetailsLoading] = useState(false);
+    const [detailsError, setDetailsError] = useState('');
+
+    useEffect(() => {
+        const text = query.trim();
+        if (text.length < 2) {
+            setResults([]);
+            setSearching(false);
+            return undefined;
+        }
+
+        const timer = setTimeout(async () => {
+            try {
+                setSearching(true);
+                const response = await fetch(`/dashboard/binary-tree/search?q=${encodeURIComponent(text)}`);
+                const data = await response.json();
+                setResults(Array.isArray(data?.items) ? data.items : []);
+            } catch {
+                setResults([]);
+            } finally {
+                setSearching(false);
+            }
+        }, 300);
+
+        return () => clearTimeout(timer);
+    }, [query]);
+
+    const selectMember = async (memberId) => {
+        try {
+            setDetailsError('');
+            setDetailsLoading(true);
+            setModalOpen(true);
+            const response = await fetch(`/dashboard/binary-tree/member/${memberId}`);
+            if (!response.ok) {
+                throw new Error('Unable to fetch details');
+            }
+            const data = await response.json();
+            setSelected(data);
+            setResults([]);
+            setQuery(data?.username || '');
+        } catch {
+            setSelected(null);
+            setDetailsError('Unable to load member details. Please try again.');
+        } finally {
+            setDetailsLoading(false);
+        }
+    };
+
+    const closeModal = () => setModalOpen(false);
 
     const loadMore = () => {
         setLoadingMore(true);
@@ -125,6 +181,74 @@ export default function BinaryTree({ tree, leftTotal, rightTotal, maxDepth = 0, 
                 </CardBody>
             </Card>
 
+            <Card className="mb-6">
+                <CardHeader title="Search member in your binary network" subtitle="Type username and pick a matching member to view details." />
+                <CardBody>
+                    <div className="relative">
+                        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-amber-300" />
+                        <input
+                            type="text"
+                            value={query}
+                            onChange={(e) => setQuery(e.target.value)}
+                            placeholder="Search by username or name..."
+                            className="w-full rounded-xl border border-amber-500/25 bg-[#1a1c28] py-2.5 pl-10 pr-4 text-sm text-slate-100 outline-none transition focus:border-amber-400 focus:ring-2 focus:ring-amber-500/20"
+                        />
+                        {searching && <Loader2 className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-amber-300" />}
+                    </div>
+
+                    {results.length > 0 && (
+                        <div className="mt-2 overflow-hidden rounded-xl border border-amber-500/20 bg-[#1f2231]">
+                            {results.map((item) => (
+                                <button
+                                    key={item.id}
+                                    type="button"
+                                    onClick={() => selectMember(item.id)}
+                                    className="flex w-full items-center justify-between gap-3 border-b border-amber-500/10 px-4 py-3 text-left text-sm transition hover:bg-[#262b3f] last:border-b-0"
+                                >
+                                    <span className="min-w-0">
+                                        <span className="block truncate font-medium text-slate-100">@{item.username}</span>
+                                        <span className="block truncate text-xs text-slate-400">{item.name || '—'}</span>
+                                    </span>
+                                    <span className={`rounded-lg border px-2 py-1 text-xs ${item.status === 'paid' ? 'border-emerald-500/40 text-emerald-300' : 'border-slate-500/40 text-slate-300'}`}>
+                                        {item.status}
+                                    </span>
+                                </button>
+                            ))}
+                        </div>
+                    )}
+
+                    {detailsError && <p className="mt-3 text-sm text-rose-300">{detailsError}</p>}
+
+                    {detailsLoading && (
+                        <div className="mt-4 inline-flex items-center gap-2 text-sm text-slate-300">
+                            <Loader2 className="h-4 w-4 animate-spin text-amber-300" />
+                            Loading member details...
+                        </div>
+                    )}
+
+                    {selected && !detailsLoading && (
+                        <div className="mt-4 rounded-xl border border-amber-500/20 bg-[#1a1c28] p-4">
+                            <div className="mb-3 flex items-center gap-2">
+                                <UserRound className="h-4 w-4 text-amber-300" />
+                                <p className="text-sm font-semibold text-slate-100">
+                                    @{selected.username} {selected.name ? `(${selected.name})` : ''}
+                                </p>
+                            </div>
+                            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                                <Metric label="Left Volume" value={`$${Number(selected.left_points_total ?? 0).toFixed(2)}`} />
+                                <Metric label="Right Volume" value={`$${Number(selected.right_points_total ?? 0).toFixed(2)}`} />
+                                <Metric label="Total Volume" value={`$${Number(selected.total_volume ?? 0).toFixed(2)}`} />
+                                <Metric label="Total Network" value={String(selected.network_total_count ?? 0)} />
+                                <Metric label="Left Team" value={String(selected.left_team_count ?? 0)} />
+                                <Metric label="Right Team" value={String(selected.right_team_count ?? 0)} />
+                                <Metric label="Paid Users" value={String(selected.network_paid_count ?? 0)} />
+                                <Metric label="Free Users" value={String(selected.network_free_count ?? 0)} />
+                            </div>
+                        </div>
+                    )}
+                </CardBody>
+            </Card>
+
             {/* Tree card */}
             <Card className="overflow-hidden">
                 <CardHeader
@@ -147,7 +271,7 @@ export default function BinaryTree({ tree, leftTotal, rightTotal, maxDepth = 0, 
                 >
                     <div className="inline-flex justify-center py-10 px-10 min-w-full min-h-full">
                         {tree ? (
-                            <TreeNode node={tree} level={0} />
+                            <TreeNode node={tree} level={0} onSelect={selectMember} />
                         ) : (
                             <div className="flex flex-col items-center justify-center py-16 text-center">
                                 <div className="w-16 h-16 rounded-2xl bg-[#262a3b] flex items-center justify-center text-slate-400 mb-4">
@@ -173,7 +297,78 @@ export default function BinaryTree({ tree, leftTotal, rightTotal, maxDepth = 0, 
                     </div>
                 )}
             </Card>
+
+            {modalOpen && (
+                <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
+                    <button type="button" className="absolute inset-0 bg-black/70" onClick={closeModal} aria-label="Close details modal" />
+                    <div className="relative z-10 w-full max-w-3xl rounded-2xl border border-amber-500/30 bg-[#1f2231] shadow-2xl">
+                        <div className="flex items-center justify-between border-b border-amber-500/20 px-5 py-4">
+                            <h3 className="text-base font-semibold text-slate-100">Member details</h3>
+                            <button type="button" onClick={closeModal} className="rounded-lg border border-amber-500/30 p-1.5 text-slate-300 transition hover:text-amber-200">
+                                <X className="h-4 w-4" />
+                            </button>
+                        </div>
+                        <div className="max-h-[80vh] overflow-auto p-5">
+                            {detailsLoading && (
+                                <div className="inline-flex items-center gap-2 text-sm text-slate-300">
+                                    <Loader2 className="h-4 w-4 animate-spin text-amber-300" />
+                                    Loading member details...
+                                </div>
+                            )}
+                            {detailsError && !detailsLoading && <p className="text-sm text-rose-300">{detailsError}</p>}
+                            {selected && !detailsLoading && (
+                                <div className="space-y-4">
+                                    <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                                        <Info label="Username" value={`@${selected.username || '-'}`} />
+                                        <Info label="Name" value={selected.name || '-'} />
+                                        <Info label="Email" value={selected.email || '-'} />
+                                        <Info label="Mobile" value={selected.mobile || '-'} />
+                                        <Info label="Country" value={selected.country || '-'} />
+                                        <Info label="City" value={selected.city || '-'} />
+                                        <Info label="Status" value={selected.status || '-'} />
+                                        <Info label="Placement Side" value={selected.placement_side || '-'} />
+                                        <Info label="Sponsor Username" value={selected.sponsor_username || '-'} />
+                                        <Info label="Binary Parent Username" value={selected.binary_parent_username || '-'} />
+                                    </div>
+
+                                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                                        <Metric label="Left Volume" value={`$${Number(selected.left_points_total ?? 0).toFixed(2)}`} />
+                                        <Metric label="Right Volume" value={`$${Number(selected.right_points_total ?? 0).toFixed(2)}`} />
+                                        <Metric label="Total Volume" value={`$${Number(selected.total_volume ?? 0).toFixed(2)}`} />
+                                        <Metric label="Total Network" value={String(selected.network_total_count ?? 0)} />
+                                        <Metric label="Left Team" value={String(selected.left_team_count ?? 0)} />
+                                        <Metric label="Right Team" value={String(selected.right_team_count ?? 0)} />
+                                        <Metric label="Paid Users" value={String(selected.network_paid_count ?? 0)} />
+                                        <Metric label="Free Users" value={String(selected.network_free_count ?? 0)} />
+                                        <Metric label="Direct Total" value={String(selected.direct_total_count ?? 0)} />
+                                        <Metric label="Direct Paid" value={String(selected.direct_paid_count ?? 0)} />
+                                        <Metric label="Direct Free" value={String(selected.direct_free_count ?? 0)} />
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
         </DashboardLayout>
+    );
+}
+
+function Metric({ label, value }) {
+    return (
+        <div className="rounded-lg border border-amber-500/15 bg-[#1f2231] px-3 py-2.5">
+            <p className="text-xs text-slate-400">{label}</p>
+            <p className="text-sm font-semibold text-slate-100 mt-1">{value}</p>
+        </div>
+    );
+}
+
+function Info({ label, value }) {
+    return (
+        <div className="rounded-lg border border-amber-500/15 bg-[#1a1c28] px-3 py-2.5">
+            <p className="text-xs text-slate-400">{label}</p>
+            <p className="mt-1 text-sm font-medium text-slate-100 break-all">{value}</p>
+        </div>
     );
 }
 

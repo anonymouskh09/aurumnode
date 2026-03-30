@@ -70,6 +70,8 @@ Route::middleware(['auth', 'user.only'])->prefix('dashboard')->name('dashboard.'
     Route::post('/transfers/to-user', [TransferController::class, 'toUser'])->name('transfers.to-user');
     Route::get('/transactions', [TransactionController::class, 'index'])->name('transactions');
     Route::get('/binary-tree', [BinaryTreeController::class, 'index'])->name('binary-tree');
+    Route::get('/binary-tree/search', [BinaryTreeController::class, 'search'])->name('binary-tree.search');
+    Route::get('/binary-tree/member/{member}', [BinaryTreeController::class, 'details'])->name('binary-tree.member');
     Route::get('/direct-bonus', [DirectBonusController::class, 'index'])->name('direct-bonus');
     Route::get('/binary-bonus', [BinaryBonusController::class, 'index'])->name('binary-bonus');
     Route::get('/roi', [RoiController::class, 'index'])->name('roi');
