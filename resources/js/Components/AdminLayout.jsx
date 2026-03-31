@@ -19,7 +19,7 @@ function FlashMessage() {
     const error = flash?.error;
     if (!status && !error) return null;
     return (
-        <div className={`mb-4 p-4 rounded-xl text-sm ${status ? 'bg-green-50 text-green-800 border border-green-200' : 'bg-red-50 text-red-800 border border-red-200'}`}>
+        <div className={`mb-4 p-4 rounded-xl text-sm ${status ? 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/30' : 'bg-rose-500/10 text-rose-300 border border-rose-500/30'}`}>
             {status || error}
         </div>
     );
@@ -55,8 +55,8 @@ function NavLinks({ pathname, onLinkClick }) {
                             onClick={onLinkClick}
                             className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
                                 isActive
-                                    ? 'bg-teal-50 text-teal-700 border-l-4 border-teal-600 -ml-[2px] pl-[14px]'
-                                    : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                                    ? 'bg-amber-500/15 text-amber-200 border-l-4 border-amber-400 -ml-[2px] pl-[14px]'
+                                    : 'text-slate-300 hover:bg-amber-500/10 hover:text-amber-200'
                             }`}
                         >
                             <Icon className="w-5 h-5 shrink-0" />
@@ -76,7 +76,7 @@ export default function AdminLayout({ children, title }) {
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
     return (
-        <div className="min-h-screen bg-slate-50 flex">
+        <div className="admin-theme min-h-screen bg-[#1a1c28] text-slate-100 flex">
             {/* Mobile overlay */}
             {mobileMenuOpen && (
                 <div
@@ -89,37 +89,37 @@ export default function AdminLayout({ children, title }) {
             {/* Sidebar - on desktop fixed; on mobile drawer */}
             <aside
                 className={`
-                    fixed top-0 left-0 z-50 h-screen w-64 bg-white border-r border-slate-200 flex flex-col shrink-0
+                    fixed top-0 left-0 z-50 h-screen w-64 bg-[#1f2231] border-r border-amber-500/20 flex flex-col shrink-0
                     transform transition-transform duration-300 ease-out
                     lg:translate-x-0
                     ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}
                 `}
             >
-                <div className="p-4 lg:p-5 border-b border-slate-100 flex items-center justify-between">
+                <div className="p-4 lg:p-5 border-b border-amber-500/20 flex items-center justify-between">
                     <Link href="/admin" className="flex items-center gap-2" onClick={() => setMobileMenuOpen(false)}>
-                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-teal-500 to-cyan-500 flex items-center justify-center">
+                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-yellow-400 flex items-center justify-center text-black">
                             <Shield className="w-5 h-5 text-white" />
                         </div>
-                        <span className="text-xl font-semibold text-slate-900">Admin</span>
+                        <span className="text-xl font-semibold text-slate-100">Admin</span>
                     </Link>
                     <button
                         type="button"
                         onClick={() => setMobileMenuOpen(false)}
-                        className="lg:hidden p-2 rounded-lg text-slate-500 hover:bg-slate-100"
+                        className="lg:hidden p-2 rounded-lg text-slate-400 hover:bg-amber-500/10"
                         aria-label="Close menu"
                     >
                         <X className="w-5 h-5" />
                     </button>
                 </div>
-                <p className="text-xs text-slate-500 px-5 pb-2 lg:block hidden">Aurum Node</p>
+                <p className="text-xs text-slate-400 px-5 pb-2 lg:block hidden">Aurum Node</p>
                 <nav className="flex-1 overflow-y-auto py-4 px-3">
                     <NavLinks pathname={pathname} onLinkClick={() => setMobileMenuOpen(false)} />
                 </nav>
-                <div className="p-3 border-t border-slate-100">
+                <div className="p-3 border-t border-amber-500/20">
                     <Link
                         href="/dashboard"
                         onClick={() => setMobileMenuOpen(false)}
-                        className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                        className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-300 hover:bg-amber-500/10 hover:text-amber-200"
                     >
                         <LayoutDashboard className="w-5 h-5 shrink-0" />
                         User Panel
@@ -130,7 +130,7 @@ export default function AdminLayout({ children, title }) {
             {/* Main - on desktop add left margin so content is beside fixed sidebar */}
             <div className="flex-1 flex flex-col min-w-0 w-full lg:ml-64">
                 {/* Topbar - responsive */}
-                <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-slate-200 px-3 sm:px-6 py-2.5 sm:py-3 flex items-center justify-between gap-2 flex-wrap">
+                <header className="sticky top-0 z-30 bg-[#1a1c28]/95 backdrop-blur-md border-b border-amber-500/20 px-3 sm:px-6 py-2.5 sm:py-3 flex items-center justify-between gap-2 flex-wrap">
                     <div className="flex items-center gap-2 min-w-0 flex-1">
                         <button
                             type="button"
@@ -140,19 +140,19 @@ export default function AdminLayout({ children, title }) {
                         >
                             <Menu className="w-6 h-6" />
                         </button>
-                        <h1 className="text-lg sm:text-2xl font-semibold text-slate-900 truncate">{title}</h1>
+                        <h1 className="text-lg sm:text-2xl font-semibold text-slate-100 truncate">{title}</h1>
                     </div>
                     <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0">
                         <Link href="/dashboard">
                             <Button variant="outline" className="text-xs sm:text-sm py-1.5 sm:py-2">User Dashboard</Button>
                         </Link>
-                        <div className="flex items-center gap-1.5 sm:gap-2 pl-1.5 sm:pl-2 border-l border-slate-200">
-                            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-teal-100 flex items-center justify-center text-teal-700 font-semibold text-xs sm:text-sm shrink-0">
+                        <div className="flex items-center gap-1.5 sm:gap-2 pl-1.5 sm:pl-2 border-l border-amber-500/20">
+                            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-amber-500/15 flex items-center justify-center text-amber-200 font-semibold text-xs sm:text-sm shrink-0">
                                 {user?.username?.[0]?.toUpperCase() ?? 'A'}
                             </div>
                             <div className="hidden sm:block text-left min-w-0">
-                                <p className="text-sm font-medium text-slate-900 truncate">{user?.name}</p>
-                                <p className="text-xs text-slate-500">Admin</p>
+                                <p className="text-sm font-medium text-slate-100 truncate">{user?.name}</p>
+                                <p className="text-xs text-slate-400">Admin</p>
                             </div>
                             <Link href="/logout" method="post" as="button">
                                 <Button variant="secondary" className="text-xs sm:text-sm py-1.5 sm:py-2">Logout</Button>
@@ -162,7 +162,7 @@ export default function AdminLayout({ children, title }) {
                 </header>
 
                 {/* Content - responsive padding */}
-                <main className="flex-1 p-4 sm:p-6 overflow-auto bg-slate-50">
+                <main className="flex-1 p-4 sm:p-6 overflow-auto bg-[#1a1c28]">
                     <div className="max-w-[1400px] mx-auto w-full">
                         <FlashMessage />
                         {children}

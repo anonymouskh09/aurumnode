@@ -5,62 +5,102 @@ import { Card, CardHeader, CardBody } from '@/Components/ui';
 import { ChevronLeft, ChevronRight, Loader2, Search, UserRound, X } from 'lucide-react';
 
 const DEEP_TREE_THRESHOLD = 10;
-const BASE_VERTICAL_GAP = 36;
-const VERTICAL_GAP_PER_LEVEL = 28;
-
-function verticalGap(level) {
-    return BASE_VERTICAL_GAP + Math.min(level * VERTICAL_GAP_PER_LEVEL, 100);
-}
+const PACKAGE_META = {
+    100: { logo: '/images/brand/100pkg.png', name: 'Starter', borderClass: 'border-emerald-300 shadow-[0_0_0_2px_rgba(110,231,183,0.38),0_0_20px_rgba(16,185,129,0.35)]' },
+    500: { logo: '/images/brand/500pkg.png', name: 'Builder', borderClass: 'border-cyan-300 shadow-[0_0_0_2px_rgba(103,232,249,0.38),0_0_20px_rgba(6,182,212,0.35)]' },
+    1000: { logo: '/images/brand/1000pkg.png', name: 'Accelerator', borderClass: 'border-blue-300 shadow-[0_0_0_2px_rgba(147,197,253,0.38),0_0_20px_rgba(59,130,246,0.35)]' },
+    2500: { logo: '/images/brand/2500pkg.png', name: 'Elite', borderClass: 'border-violet-300 shadow-[0_0_0_2px_rgba(196,181,253,0.38),0_0_20px_rgba(139,92,246,0.35)]' },
+    5000: { logo: '/images/brand/5000pkglogo.jpeg', name: 'Titan', borderClass: 'border-fuchsia-300 shadow-[0_0_0_2px_rgba(240,171,252,0.38),0_0_20px_rgba(217,70,239,0.35)]' },
+    10000: { logo: '/images/brand/10000pkg.png', name: 'Legacy', borderClass: 'border-rose-300 shadow-[0_0_0_2px_rgba(253,164,175,0.38),0_0_20px_rgba(244,63,94,0.35)]' },
+};
+const FREE_USER_LOGO = '/images/brand/free.jpeg';
 
 function TreeNode({ node, level = 0, onSelect }) {
     if (!node) return null;
 
     const isPaid = node.status === 'paid';
     const isRoot = level === 0;
-    const displayName = node.username || node.name || `User #${node.id}`;
-    const gap = verticalGap(level);
+    const highestPackageAmount = Math.round(Number(node.highest_package_amount ?? 0));
+    const packageMeta = PACKAGE_META[highestPackageAmount] || null;
+    const packageLogo = packageMeta?.logo || null;
+    const packageBorderClass = packageMeta?.borderClass || (isPaid ? 'border-amber-300 shadow-[0_0_0_2px_rgba(252,211,77,0.35),0_0_16px_rgba(245,158,11,0.30)]' : 'border-amber-500/30');
+    const hasLeft = !!node.left;
+    const hasRight = !!node.right;
+    const hasChildren = hasLeft || hasRight;
 
     return (
-        <div className="flex flex-col items-center" style={{ marginTop: gap }}>
+        <div className="flex flex-col items-center">
             <button
                 type="button"
                 onClick={() => onSelect?.(node.id)}
                 className={`
-                    px-4 py-2.5 rounded-xl border-2 text-sm font-medium min-w-[110px] max-w-[140px] text-center shrink-0
-                    transition-shadow duration-200 cursor-pointer
+                    relative h-24 w-24 rounded-full border-2 p-1.5 shrink-0
+                    transition-shadow duration-200 cursor-pointer overflow-hidden flex items-center justify-center
                     ${isRoot
                         ? 'ring-2 ring-amber-200 ring-offset-2 ring-offset-slate-50 shadow-md'
                         : ''
                     }
-                    ${isPaid
-                        ? 'bg-amber-500/10 border-amber-400 text-amber-100 shadow-sm'
-                        : 'bg-[#1f2231] border-amber-500/20 text-slate-300 hover:border-amber-500/30'
-                    }
+                    ${isPaid ? 'bg-amber-500/10 shadow-sm' : 'bg-[#1f2231]'}
+                    ${packageBorderClass}
                 `}
+                title={node.username || node.name || `User #${node.id}`}
             >
-                <span className="text-[10px] uppercase tracking-wide text-slate-400 font-medium block mb-1">
-                    Level {node.level ?? level + 1}
-                </span>
-                <span className="font-semibold text-slate-100 block truncate" title={displayName}>
-                    {displayName}
-                </span>
-                <div className="flex justify-center gap-3 mt-1.5 text-xs text-slate-400">
-                    <span title="Left volume (USDT)">L: ${(node.left_points ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                    <span title="Right volume (USDT)">R: ${(node.right_points ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                </div>
+                {packageLogo && (
+                    <img
+                        src={packageLogo}
+                        alt={`$${highestPackageAmount} package`}
+                        className="h-full w-full rounded-full object-cover"
+                    />
+                )}
+                {!packageLogo && (
+                    <img
+                        src={FREE_USER_LOGO}
+                        alt="Free user"
+                        className="h-full w-full rounded-full object-cover"
+                    />
+                )}
+                {packageMeta && (
+                    <span className="absolute inset-x-1 bottom-1 rounded-full bg-black/70 px-1 py-[2px] text-[9px] font-semibold text-white truncate">
+                        {packageMeta.name} ${highestPackageAmount}
+                    </span>
+                )}
             </button>
-            {(node.left || node.right) && (
-                <div className="flex gap-16 mt-3">
-                    <div className="flex flex-col items-center">
-                        <span className="text-[10px] uppercase tracking-wide text-slate-400 font-medium mb-1.5">Left</span>
-                        <div className="w-0.5 h-5 bg-slate-300 rounded-full shrink-0" />
-                        <TreeNode node={node.left} level={level + 1} onSelect={onSelect} />
-                    </div>
-                    <div className="flex flex-col items-center">
-                        <span className="text-[10px] uppercase tracking-wide text-slate-400 font-medium mb-1.5">Right</span>
-                        <div className="w-0.5 h-5 bg-slate-300 rounded-full shrink-0" />
-                        <TreeNode node={node.right} level={level + 1} onSelect={onSelect} />
-                    </div>
+            {hasChildren && (
+                <div className="mt-3 flex flex-col items-center">
+                    <div className="h-4 w-px bg-cyan-300/90 shadow-[0_0_14px_rgba(125,211,252,0.95)]" />
+                    {hasLeft && hasRight ? (
+                        <div className="flex flex-col items-center">
+                            <svg
+                                viewBox="0 0 100 36"
+                                preserveAspectRatio="none"
+                                className="h-9 w-28 sm:w-40"
+                                aria-hidden="true"
+                            >
+                                <path
+                                    d="M50 0 L18 34 M50 0 L82 34"
+                                    fill="none"
+                                    stroke="rgba(125,211,252,0.95)"
+                                    strokeWidth="1.8"
+                                    strokeLinecap="round"
+                                />
+                            </svg>
+                            <div className="flex items-start justify-center gap-6 sm:gap-10">
+                                <div className="flex flex-col items-center">
+                                    <div className="h-3 w-px bg-cyan-300/90 shadow-[0_0_12px_rgba(125,211,252,0.95)]" />
+                                    <TreeNode node={node.left} level={level + 1} onSelect={onSelect} />
+                                </div>
+                                <div className="flex flex-col items-center">
+                                    <div className="h-3 w-px bg-cyan-300/90 shadow-[0_0_12px_rgba(125,211,252,0.95)]" />
+                                    <TreeNode node={node.right} level={level + 1} onSelect={onSelect} />
+                                </div>
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="flex flex-col items-center">
+                            <div className="h-8 w-px bg-cyan-300/90 shadow-[0_0_12px_rgba(125,211,252,0.95)]" />
+                            <TreeNode node={node.left || node.right} level={level + 1} onSelect={onSelect} />
+                        </div>
+                    )}
                 </div>
             )}
         </div>
@@ -326,6 +366,7 @@ export default function BinaryTree({ tree, leftTotal, rightTotal, maxDepth = 0, 
                                         <Info label="Country" value={selected.country || '-'} />
                                         <Info label="City" value={selected.city || '-'} />
                                         <Info label="Status" value={selected.status || '-'} />
+                                        <Info label="Highest Package" value={selected.highest_package_amount ? `$${Math.round(Number(selected.highest_package_amount))}` : '-'} />
                                         <Info label="Placement Side" value={selected.placement_side || '-'} />
                                         <Info label="Sponsor Username" value={selected.sponsor_username || '-'} />
                                         <Info label="Binary Parent Username" value={selected.binary_parent_username || '-'} />

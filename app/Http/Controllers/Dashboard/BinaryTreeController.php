@@ -82,6 +82,7 @@ class BinaryTreeController extends Controller
                 'status' => $u->status,
                 'left_points_total' => (float) $u->left_points_total,
                 'right_points_total' => (float) $u->right_points_total,
+                'highest_package_amount' => (float) $u->userPackages()->max('invested_amount'),
             ])
             ->values();
 
@@ -119,6 +120,7 @@ class BinaryTreeController extends Controller
         $directFree = (int) $member->referrals()->where('status', User::STATUS_FREE)->count();
         $sponsorUsername = optional($member->sponsor)->username;
         $binaryParentUsername = optional($member->binaryParent)->username;
+        $highestPackageAmount = (float) $member->userPackages()->max('invested_amount');
 
         return response()->json([
             'id' => $member->id,
@@ -132,6 +134,7 @@ class BinaryTreeController extends Controller
             'status' => $member->status,
             'sponsor_username' => $sponsorUsername,
             'binary_parent_username' => $binaryParentUsername,
+            'highest_package_amount' => $highestPackageAmount,
             'left_points_total' => (float) $member->left_points_total,
             'right_points_total' => (float) $member->right_points_total,
             'total_volume' => (float) $member->left_points_total + (float) $member->right_points_total,
@@ -166,6 +169,7 @@ class BinaryTreeController extends Controller
             'name' => $user->name,
             'status' => $user->status,
             'level' => $depth + 1,
+            'highest_package_amount' => (float) $user->userPackages()->max('invested_amount'),
             'left_points' => (float) $user->left_points_total,
             'right_points' => (float) $user->right_points_total,
             'left' => null,

@@ -64,7 +64,7 @@ export default function Register({ referralUsername, referralSide, errors: serve
                         </Link>
                         <h2 className="mb-2 text-2xl font-semibold">Create your account</h2>
                         <p className="mb-6 text-sm text-slate-300">
-                            Sponsor is optional. You can register directly or with a referral link.
+                            Sponsor is required. Register using a valid sponsor username or referral link.
                         </p>
 
                         <form onSubmit={submit} className="space-y-5">
@@ -72,14 +72,14 @@ export default function Register({ referralUsername, referralSide, errors: serve
                                 <div>
                                     <label htmlFor="sponsor_username" className="mb-2 flex items-center gap-2 text-sm text-slate-200">
                                         <Users className="h-4 w-4 text-amber-300" />
-                                        Sponsor username <span className="text-slate-400">(optional)</span>
+                                        Sponsor username
                                     </label>
                                     <input
                                         id="sponsor_username"
                                         type="text"
                                         value={data.sponsor_username}
                                         onChange={(e) => setData('sponsor_username', e.target.value)}
-                                        placeholder="Optional sponsor username"
+                                        placeholder="Enter sponsor username"
                                         className="w-full rounded-xl border border-amber-500/30 bg-[#1a1c28]/60 px-4 py-2.5 text-slate-100 outline-none transition focus:border-amber-400 focus:ring-2 focus:ring-amber-500/20"
                                         readOnly={!!referralUsername}
                                     />
@@ -96,7 +96,7 @@ export default function Register({ referralUsername, referralSide, errors: serve
                                         value={data.placement_side}
                                         onChange={(e) => setData('placement_side', e.target.value)}
                                         className="w-full rounded-xl border border-amber-500/30 bg-[#1a1c28]/60 px-4 py-2.5 text-slate-100 outline-none transition focus:border-amber-400 focus:ring-2 focus:ring-amber-500/20"
-                                        disabled={!!referralSide}
+                                        disabled={!!referralUsername && !!referralSide}
                                     >
                                         <option value="left">Left</option>
                                         <option value="right">Right</option>

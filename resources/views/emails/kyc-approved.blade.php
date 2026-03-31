@@ -6,6 +6,11 @@
 </head>
 <body style="margin:0;background:#0f1322;padding:24px;font-family:Arial,sans-serif;">
 <div style="max-width:640px;margin:0 auto;background:#1a1f31;border:1px solid #303650;border-radius:14px;padding:24px;color:#f8fafc;">
+    <img
+        src="{{ rtrim(config('app.url'), '/') . '/images/brand/emailLogo.jpeg' }}"
+        alt="AurumNode"
+        style="width:100%;max-width:592px;height:auto;display:block;border-radius:10px;margin:0 0 18px;"
+    >
     <h1 style="margin:0 0 14px;font-size:22px;line-height:1.3;color:#f8fafc;">KYC approved</h1>
     <p style="margin:0 0 12px;color:#cbd5e1;">Hi {{ $user->name }},</p>
     <p style="margin:0 0 14px;color:#cbd5e1;line-height:1.7;">

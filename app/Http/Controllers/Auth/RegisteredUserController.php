@@ -33,7 +33,7 @@ class RegisteredUserController extends Controller
         }
 
         $referralUsername = null;
-        $referralSide = $side;
+        $referralSide = null;
 
         if ($ref) {
             $sponsor = User::where('username', $ref)->first();
@@ -55,30 +55,16 @@ class RegisteredUserController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
-        $sponsorUsername = $request->string('sponsor_username')->trim();
-        $sponsor = null;
-        $placementSide = null;
-
-        if (! $sponsorUsername->isEmpty()) {
-            $sponsor = User::where('username', (string) $sponsorUsername)->first();
-            if (! $sponsor) {
-                throw \Illuminate\Validation\ValidationException::withMessages([
-                    'sponsor_username' => ['The sponsor username is invalid or does not exist.'],
-                ]);
-            }
-            $placementSide = $request->input('placement_side', 'left');
-            if (! in_array($placementSide, ['left', 'right'], true)) {
-                $placementSide = 'left';
-            }
-        }
-
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'username' => ['required', 'string', 'max:255', 'unique:users,username', 'alpha_dash'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:users,email'],
             'mobile' => ['nullable', 'string', 'max:30', 'regex:/^\+\d{6,20}$/', 'unique:users,mobile'],
+            'sponsor_username' => ['required', 'string', 'exists:users,username'],
+            'placement_side' => ['required', 'in:left,right'],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
         ]);
+        $sponsor = User::where('username', $validated['sponsor_username'])->firstOrFail();
 
         $user = User::create([
             'name' => $validated['name'],
@@ -86,14 +72,12 @@ class RegisteredUserController extends Controller
             'email' => $validated['email'],
             'mobile' => $validated['mobile'] ?? null,
             'password' => Hash::make($validated['password']),
-            'sponsor_id' => $sponsor?->id,
-            'placement_side' => $placementSide,
+            'sponsor_id' => $sponsor->id,
+            'placement_side' => $validated['placement_side'],
             'status' => User::STATUS_FREE,
         ]);
 
-        if ($sponsor) {
-            app(BinaryPlacementService::class)->placeUser($user, $sponsor, $placementSide);
-        }
+        app(BinaryPlacementService::class)->placeUser($user, $sponsor, $validated['placement_side']);
 
         event(new Registered($user));
         Mail::to($user->email)->send(new WelcomeMail($user));
