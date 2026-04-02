@@ -26,7 +26,7 @@ class UserPackageControlsController extends Controller
     public function index(Request $request): Response
     {
         $members = User::where('is_admin', false)
-            ->with(['activeUserPackage.package', 'userPackages.package'])
+            ->with(['activeUserPackage.package', 'userPackages.package', 'sponsor:id,username,name'])
             ->when($request->input('q'), fn ($q) => $q->where('username', 'like', '%'.$request->q.'%')->orWhere('email', 'like', '%'.$request->q.'%'))
             ->latest()
             ->paginate(20)

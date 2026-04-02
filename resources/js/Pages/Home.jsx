@@ -434,7 +434,7 @@ export default function Home() {
                                 <p className="leading-7 text-slate-300">{item.answer}</p>
                             </div>
                         ))}
-                    </div>
+                </div>
                 </section>
 
                 <section className="border-t border-amber-500/20 bg-gradient-to-r from-amber-700/20 to-amber-500/5 py-16">

@@ -15,6 +15,7 @@ export default function AdminUserPackageControlsIndex({ members }) {
                     <thead className="bg-slate-100">
                         <tr>
                             <th className="text-left p-3">User</th>
+                            <th className="text-left p-3">Sponsor</th>
                             <th className="text-left p-3">Active package</th>
                             <th className="text-left p-3">Status</th>
                             <th className="text-left p-3">Actions</th>
@@ -22,10 +23,11 @@ export default function AdminUserPackageControlsIndex({ members }) {
                     </thead>
                     <tbody>
                         {(members?.data ?? []).length === 0 ? (
-                            <tr><td colSpan={4} className="p-6 text-center text-slate-500">No members found.</td></tr>
+                            <tr><td colSpan={5} className="p-6 text-center text-slate-500">No members found.</td></tr>
                         ) : (members?.data ?? []).map((m) => (
                             <tr key={m.id} className="border-t border-slate-200">
                                 <td className="p-3">{m.username} / {m.email}</td>
+                                <td className="p-3">{m.sponsor?.username ?? m.sponsor?.name ?? '—'}</td>
                                 <td className="p-3">{m.active_user_package?.package?.name ?? '—'}</td>
                                 <td className="p-3">{m.active_user_package?.status ?? '—'}</td>
                                 <td className="p-3">

@@ -361,10 +361,7 @@ export default function BinaryTree({ tree, leftTotal, rightTotal, maxDepth = 0, 
                                     <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                                         <Info label="Username" value={`@${selected.username || '-'}`} />
                                         <Info label="Name" value={selected.name || '-'} />
-                                        <Info label="Email" value={selected.email || '-'} />
-                                        <Info label="Mobile" value={selected.mobile || '-'} />
                                         <Info label="Country" value={selected.country || '-'} />
-                                        <Info label="City" value={selected.city || '-'} />
                                         <Info label="Status" value={selected.status || '-'} />
                                         <Info label="Highest Package" value={selected.highest_package_amount ? `$${Math.round(Number(selected.highest_package_amount))}` : '-'} />
                                         <Info label="Placement Side" value={selected.placement_side || '-'} />
