@@ -35,4 +35,18 @@ return [
         ],
     ],
 
+    'coinpayments' => [
+        'enabled' => env('COINPAYMENTS_ENABLED', false),
+        'merchant_id' => env('COINPAYMENTS_MERCHANT_ID'),
+        'public_key' => env('COINPAYMENTS_PUBLIC_KEY'),
+        'private_key' => env('COINPAYMENTS_PRIVATE_KEY'),
+        'ipn_secret' => env('COINPAYMENTS_IPN_SECRET'),
+        'ipn_url' => env('COINPAYMENTS_IPN_URL'),
+        'api_url' => env('COINPAYMENTS_API_URL', 'https://www.coinpayments.net/api.php'),
+        'currency_base' => env('COINPAYMENTS_CURRENCY_BASE', 'USDT'),
+        'default_pay_currency' => env('COINPAYMENTS_DEFAULT_PAY_CURRENCY', 'USDT.TRC20'),
+        'allowed_pay_currencies' => array_filter(array_map('trim', explode(',', (string) env('COINPAYMENTS_ALLOWED_PAY_CURRENCIES', 'USDT.TRC20,USDT.BEP20,USDT.ERC20,USDT.SOL')))),
+        'min_deposit' => (float) env('COINPAYMENTS_MIN_DEPOSIT', 10),
+    ],
+
 ];

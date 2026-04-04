@@ -12,7 +12,17 @@ const packageMetaByPrice = {
     10000: { weekly: 'up to 3%', monthly: 'up to 12%', cap: '4X', directBonus: '10%', binaryBonus: '10%' },
 };
 
-export default function Packages({ packages, deposit_balance_usdt, withdrawal_balance_usdt, highest_purchased_amount }) {
+export default function Packages({
+    packages,
+    deposit_balance_usdt,
+    withdrawal_balance_usdt,
+    highest_purchased_amount,
+    coinpayments_min_deposit = 10,
+    coinpayments_allowed_pay_currencies = [],
+    coinpayments_default_pay_currency = 'USDT.TRC20',
+    coinpayments_enabled = false,
+    recent_deposit_intents = [],
+}) {
     const depositBalance = parseFloat(deposit_balance_usdt ?? 0);
     const withdrawalBalance = parseFloat(withdrawal_balance_usdt ?? 0);
     const highestPurchasedAmount = parseFloat(highest_purchased_amount ?? 0);
@@ -32,8 +42,38 @@ export default function Packages({ packages, deposit_balance_usdt, withdrawal_ba
                 </Card>
                 <Card className="border-amber-500/30 bg-amber-500/10">
                     <CardBody>
-                        <p className="text-sm font-medium text-amber-200 mb-2">Demo: Add to Deposit Wallet</p>
-                        <DemoDepositForm />
+                        <p className="text-sm font-medium text-amber-200 mb-2">Deposit via CoinPayments</p>
+                        <CoinpaymentsDepositForm
+                            minDeposit={coinpayments_min_deposit}
+                            enabled={coinpayments_enabled}
+                            allowedPayCurrencies={coinpayments_allowed_pay_currencies}
+                            defaultPayCurrency={coinpayments_default_pay_currency}
+                        />
+                    </CardBody>
+                </Card>
+                <Card className="border-amber-500/20">
+                    <CardBody>
+                        <p className="text-sm font-medium text-amber-200 mb-2">Recent deposit requests</p>
+                        {(recent_deposit_intents ?? []).length === 0 ? (
+                            <p className="text-sm text-slate-400">No CoinPayments requests yet.</p>
+                        ) : (
+                            <div className="space-y-2">
+                                {(recent_deposit_intents ?? []).map((intent) => (
+                                    <div
+                                        key={intent.id}
+                                        className="rounded-lg border border-amber-500/15 bg-[#1a1c28] px-3 py-2 text-sm"
+                                    >
+                                        <p className="text-slate-100 font-medium">
+                                            {intent.order_ref} - ${Number(intent.amount_requested ?? 0).toFixed(2)} ({intent.pay_currency || 'USDT'})
+                                        </p>
+                                        <p className="text-slate-300">
+                                            Status: <span className="uppercase">{intent.status}</span>
+                                            {intent.status_message ? ` - ${intent.status_message}` : ''}
+                                        </p>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
                     </CardBody>
                 </Card>
             </div>
@@ -52,13 +92,20 @@ export default function Packages({ packages, deposit_balance_usdt, withdrawal_ba
     );
 }
 
-function DemoDepositForm() {
-    const { data, setData, post, processing } = useForm({ amount: '100' });
+function CoinpaymentsDepositForm({ minDeposit, enabled, allowedPayCurrencies, defaultPayCurrency }) {
+    const normalizedCurrencies = Array.isArray(allowedPayCurrencies) && allowedPayCurrencies.length > 0
+        ? allowedPayCurrencies
+        : ['USDT.TRC20', 'USDT.BEP20', 'USDT.ERC20', 'USDT.SOL'];
+    const { data, setData, post, processing } = useForm({
+        amount: String(minDeposit ?? 10),
+        pay_currency: defaultPayCurrency || normalizedCurrencies[0],
+    });
+
     return (
         <form
             onSubmit={(e) => {
                 e.preventDefault();
-                post('/dashboard/packages/demo-deposit');
+                post('/dashboard/packages/deposit/start');
             }}
             className="flex flex-wrap items-end gap-2"
         >
@@ -66,17 +113,32 @@ function DemoDepositForm() {
                 <label className="block text-xs text-slate-300 mb-1">Amount (USDT)</label>
                 <input
                     type="number"
-                    step="1"
-                    min="1"
-                    max="100000"
+                    step="0.01"
+                    min={String(minDeposit ?? 10)}
+                    max="1000000"
                     value={data.amount}
                     onChange={(e) => setData('amount', e.target.value)}
                     className="block w-full rounded-lg border border-amber-500/20 px-3 py-2 text-sm"
                 />
             </div>
-            <Button type="submit" variant="primary" disabled={processing}>
-                {processing ? 'Adding...' : 'Add to Deposit'}
+            <div className="min-w-[170px]">
+                <label className="block text-xs text-slate-300 mb-1">Pay currency</label>
+                <select
+                    value={data.pay_currency}
+                    onChange={(e) => setData('pay_currency', e.target.value)}
+                    className="block w-full rounded-lg border border-amber-500/20 px-3 py-2 text-sm"
+                >
+                    {normalizedCurrencies.map((coin) => (
+                        <option key={coin} value={coin}>
+                            {coin}
+                        </option>
+                    ))}
+                </select>
+            </div>
+            <Button type="submit" variant="primary" disabled={processing || !enabled}>
+                {processing ? 'Redirecting...' : 'Pay with CoinPayments'}
             </Button>
+            {!enabled && <p className="text-xs text-rose-300">CoinPayments is disabled in server settings.</p>}
         </form>
     );
 }

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Dashboard;
 
 use App\Http\Controllers\Controller;
+use App\Models\CoinpaymentDepositIntent;
 use App\Models\Package;
 use App\Services\PackagePurchaseService;
 use App\Services\WalletService;
@@ -32,12 +33,32 @@ class PackageController extends Controller
         $depositBalance = (float) $wallet->deposit_wallet;
         $withdrawalBalance = (float) $wallet->withdrawal_wallet;
         $highestPurchasedAmount = (float) $user->userPackages()->max('invested_amount');
+        $recentDepositIntents = CoinpaymentDepositIntent::where('user_id', $user->id)
+            ->latest()
+            ->limit(5)
+            ->get(['id', 'order_ref', 'amount_requested', 'amount_received', 'pay_currency', 'status', 'status_message', 'created_at'])
+            ->map(fn ($intent) => [
+                'id' => $intent->id,
+                'order_ref' => $intent->order_ref,
+                'amount_requested' => round((float) $intent->amount_requested, 8),
+                'amount_received' => round((float) $intent->amount_received, 8),
+                'pay_currency' => $intent->pay_currency,
+                'status' => $intent->status,
+                'status_message' => $intent->status_message,
+                'created_at' => optional($intent->created_at)->toDateTimeString(),
+            ])
+            ->values();
 
         return Inertia::render('Dashboard/Packages', [
             'packages' => $packages,
             'deposit_balance_usdt' => round($depositBalance, 2),
             'withdrawal_balance_usdt' => round($withdrawalBalance, 2),
             'highest_purchased_amount' => round($highestPurchasedAmount, 2),
+            'coinpayments_min_deposit' => (float) config('services.coinpayments.min_deposit', 10),
+            'coinpayments_allowed_pay_currencies' => config('services.coinpayments.allowed_pay_currencies', []),
+            'coinpayments_default_pay_currency' => (string) config('services.coinpayments.default_pay_currency', 'USDT.TRC20'),
+            'coinpayments_enabled' => (bool) config('services.coinpayments.enabled', false),
+            'recent_deposit_intents' => $recentDepositIntents,
         ]);
     }
 
@@ -71,18 +92,4 @@ class PackageController extends Controller
         return redirect()->route('dashboard.index')->with('status', 'Package purchased successfully.');
     }
 
-    /**
-     * Demo: add amount to current user's deposit wallet (for testing).
-     */
-    public function demoDeposit(Request $request): RedirectResponse
-    {
-        $validated = $request->validate([
-            'amount' => ['required', 'numeric', 'min:1', 'max:100000'],
-        ]);
-
-        $amount = (float) $validated['amount'];
-        $this->walletService->addToDeposit($request->user(), $amount);
-
-        return back()->with('status', 'Demo amount $'.number_format($amount, 2).' added to Deposit Wallet.');
-    }
 }

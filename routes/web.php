@@ -19,6 +19,7 @@ use App\Http\Controllers\Dashboard\DirectBonusController;
 use App\Http\Controllers\Dashboard\BinaryBonusController;
 use App\Http\Controllers\Dashboard\BinaryTreeController;
 use App\Http\Controllers\Dashboard\RoiController;
+use App\Http\Controllers\Payments\CoinpaymentsController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -34,6 +35,11 @@ Route::get('/kyc-policy', fn () => Inertia::render('KycPolicy'))->name('kyc-poli
 Route::get('/aml-policy', fn () => Inertia::render('AmlPolicy'))->name('aml-policy');
 Route::get('/contact', [ContactController::class, 'index'])->name('contact');
 Route::post('/contact', [ContactController::class, 'store'])->name('contact.store');
+
+// CoinPayments IPN callback (public, no CSRF token available from provider)
+Route::post('/payments/coinpayments/ipn', [CoinpaymentsController::class, 'ipn'])
+    ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class])
+    ->name('payments.coinpayments.ipn');
 
 // Auth
 Route::middleware('guest')->group(function () {
@@ -56,7 +62,7 @@ Route::middleware(['auth', 'user.only'])->prefix('dashboard')->name('dashboard.'
     Route::get('/', DashboardController::class)->name('index');
     Route::get('/packages', [PackageController::class, 'index'])->name('packages');
     Route::post('/packages/buy', [PackageController::class, 'buy'])->name('packages.buy');
-    Route::post('/packages/demo-deposit', [PackageController::class, 'demoDeposit'])->name('packages.demo-deposit');
+    Route::post('/packages/deposit/start', [CoinpaymentsController::class, 'startDeposit'])->name('packages.deposit.start');
     Route::get('/profile', [ProfileController::class, 'index'])->name('profile');
     Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::post('/profile/transaction-password', [ProfileController::class, 'transactionPassword'])->name('profile.transaction-password');
