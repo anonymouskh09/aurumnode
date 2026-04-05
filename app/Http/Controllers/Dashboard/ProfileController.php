@@ -111,22 +111,38 @@ class ProfileController extends Controller
     public function kyc(Request $request): RedirectResponse
     {
         $request->validate([
-            'document_type' => ['required', 'string', 'in:id_front,id_back,selfie'],
-            'document' => ['required', 'file', 'mimes:jpeg,jpg,png,pdf', 'max:5120'],
+            'id_front' => ['nullable', 'file', 'mimes:jpeg,jpg,png,pdf', 'max:5120'],
+            'id_back' => ['nullable', 'file', 'mimes:jpeg,jpg,png,pdf', 'max:5120'],
+            'selfie' => ['nullable', 'file', 'mimes:jpeg,jpg,png,pdf', 'max:5120'],
         ]);
 
         $user = $request->user();
-        $file = $request->file('document');
-        $path = $file->store('kyc/'.$user->id, 'local');
+        $uploadMap = [
+            'id_front' => $request->file('id_front'),
+            'id_back' => $request->file('id_back'),
+            'selfie' => $request->file('selfie'),
+        ];
 
-        $document = $user->kycDocuments()->create([
-            'document_type' => $request->document_type,
-            'file_path' => $path,
-            'status' => 'pending',
-        ]);
+        $filesUploaded = array_filter($uploadMap);
+        if ($filesUploaded === []) {
+            return back()->withErrors([
+                'id_front' => 'Please upload at least one KYC file (front/back/selfie).',
+            ]);
+        }
+        $batchRef = 'KYC-'.now()->format('YmdHis').'-'.Str::upper(Str::random(8));
 
-        Mail::to($user->email)->send(new KycSubmittedMail($user, $document));
+        foreach ($filesUploaded as $type => $file) {
+            $path = $file->store('kyc/'.$user->id, 'local');
+            $document = $user->kycDocuments()->create([
+                'document_type' => $type,
+                'file_path' => $path,
+                'batch_ref' => $batchRef,
+                'status' => 'pending',
+            ]);
 
-        return back()->with('status', 'Document uploaded.');
+            Mail::to($user->email)->send(new KycSubmittedMail($user, $document));
+        }
+
+        return back()->with('status', 'KYC files uploaded successfully.');
     }
 }

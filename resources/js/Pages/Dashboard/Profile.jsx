@@ -86,7 +86,11 @@ function TransactionPasswordForm({ errors: serverErrors }) {
 }
 
 function KycSection({ kycDocuments }) {
-    const { data, setData, post, processing } = useForm({ document_type: 'id_front', document: null });
+    const { data, setData, post, processing, errors } = useForm({
+        id_front: null,
+        id_back: null,
+        selfie: null,
+    });
 
     return (
         <Card>
@@ -94,17 +98,33 @@ function KycSection({ kycDocuments }) {
             <CardBody>
                 <form onSubmit={(e) => { e.preventDefault(); post('/dashboard/profile/kyc', { forceFormData: true }); }} className="space-y-4">
                     <div>
-                        <label className="block text-sm font-medium text-slate-300 mb-1">Document type</label>
-                        <select value={data.document_type} onChange={(e) => setData('document_type', e.target.value)} className={inputClass}>
-                            <option value="id_front">ID Front</option>
-                            <option value="id_back">ID Back</option>
-                            <option value="selfie">Selfie</option>
-                        </select>
+                        <label className="block text-sm font-medium text-slate-300 mb-1">ID Front</label>
+                        <input
+                            type="file"
+                            accept="image/*,.pdf"
+                            onChange={(e) => setData('id_front', e.target.files[0] ?? null)}
+                            className="block w-full text-sm text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:bg-amber-500/10 file:text-amber-300"
+                        />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-slate-300 mb-1">Upload file</label>
-                        <input type="file" accept="image/*,.pdf" onChange={(e) => setData('document', e.target.files[0])} className="block w-full text-sm text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:bg-amber-500/10 file:text-amber-300" />
+                        <label className="block text-sm font-medium text-slate-300 mb-1">ID Back</label>
+                        <input
+                            type="file"
+                            accept="image/*,.pdf"
+                            onChange={(e) => setData('id_back', e.target.files[0] ?? null)}
+                            className="block w-full text-sm text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:bg-amber-500/10 file:text-amber-300"
+                        />
                     </div>
+                    <div>
+                        <label className="block text-sm font-medium text-slate-300 mb-1">Selfie (optional)</label>
+                        <input
+                            type="file"
+                            accept="image/*,.pdf"
+                            onChange={(e) => setData('selfie', e.target.files[0] ?? null)}
+                            className="block w-full text-sm text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:bg-amber-500/10 file:text-amber-300"
+                        />
+                    </div>
+                    {errors?.id_front && <p className="text-sm text-red-600 mt-1">{errors.id_front}</p>}
                     <Button type="submit" variant="primary" disabled={processing}>Upload</Button>
                 </form>
                 {kycDocuments?.length > 0 && (

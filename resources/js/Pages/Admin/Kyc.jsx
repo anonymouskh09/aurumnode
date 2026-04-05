@@ -6,6 +6,18 @@ import Button from '@/Components/ui/Button';
 import Badge from '@/Components/ui/Badge';
 
 export default function AdminKyc({ documents }) {
+    const submitDecision = (docId, action) => {
+        router.post(
+            `/admin/kyc/${docId}/${action}`,
+            {},
+            {
+                preserveScroll: true,
+                preserveState: false,
+                replace: true,
+            }
+        );
+    };
+
     return (
         <AdminLayout title="KYC">
             <Card>
@@ -17,7 +29,7 @@ export default function AdminKyc({ documents }) {
                     <Table>
                         <TableHeader>
                             <Th>User</Th>
-                            <Th>Type</Th>
+                            <Th>Documents</Th>
                             <Th>Status</Th>
                             <Th>Submitted</Th>
                             <Th>Actions</Th>
@@ -30,7 +42,26 @@ export default function AdminKyc({ documents }) {
                                             <span className="font-medium">{doc.user?.username}</span>
                                             {doc.user?.name && <span className="text-slate-500 block text-xs">{doc.user.name}</span>}
                                         </Td>
-                                        <Td className="text-slate-600">{doc.document_type}</Td>
+                                        <Td>
+                                            {(doc.documents ?? []).length > 0 ? (
+                                                <div className="space-y-1">
+                                                    {(doc.documents ?? []).map((item) => (
+                                                        <a
+                                                            key={item.id}
+                                                            href={item.view_url}
+                                                            target="_blank"
+                                                            rel="noreferrer"
+                                                            className="flex items-center justify-between rounded-lg border border-amber-500/20 px-2.5 py-1 text-xs text-amber-300 transition hover:bg-amber-500/10"
+                                                        >
+                                                            <span>{item.document_type}</span>
+                                                            <span className="uppercase text-[10px] text-slate-300">{item.status}</span>
+                                                        </a>
+                                                    ))}
+                                                </div>
+                                            ) : (
+                                                <span className="text-slate-500 text-xs">No files</span>
+                                            )}
+                                        </Td>
                                         <Td>
                                             <Badge variant={doc.status === 'approved' ? 'success' : doc.status === 'rejected' ? 'danger' : 'pending'}>
                                                 {doc.status}
@@ -43,14 +74,16 @@ export default function AdminKyc({ documents }) {
                                                     <Button
                                                         variant="outline"
                                                         className="text-sm text-green-700 border-green-300 hover:bg-green-50"
-                                                        onClick={() => router.post(`/admin/kyc/${doc.id}/approve`, {}, { preserveScroll: true })}
+                                                        type="button"
+                                                        onClick={() => submitDecision(doc.id, 'approve')}
                                                     >
                                                         Approve
                                                     </Button>
                                                     <Button
                                                         variant="outline"
                                                         className="text-sm text-red-700 border-red-300 hover:bg-red-50"
-                                                        onClick={() => router.post(`/admin/kyc/${doc.id}/reject`, {}, { preserveScroll: true })}
+                                                        type="button"
+                                                        onClick={() => submitDecision(doc.id, 'reject')}
                                                     >
                                                         Reject
                                                     </Button>

@@ -36,6 +36,7 @@ class HandleInertiaRequests extends Middleware
     public function share(Request $request): array
     {
         $user = $request->user();
+        $authUser = null;
 
         if ($user) {
             $user->loadMissing([
@@ -57,14 +58,15 @@ class HandleInertiaRequests extends Middleware
 
                 $sponsorDisplay = $placement?->sponsor?->name ?: $placement?->sponsor?->username;
             }
-
-            $user->setAttribute('sponsor_display', $sponsorDisplay ?: null);
+            $authUser = array_merge($user->toArray(), [
+                'sponsor_display' => $sponsorDisplay ?: null,
+            ]);
         }
 
         return [
             ...parent::share($request),
             'auth' => [
-                'user' => $user,
+                'user' => $authUser,
             ],
             'flash' => [
                 'status' => $request->session()->get('status'),

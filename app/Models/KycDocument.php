@@ -8,7 +8,7 @@ use Illuminate\Http\UploadedFile;
 
 class KycDocument extends Model
 {
-    protected $fillable = ['user_id', 'document_type', 'file_path', 'status'];
+    protected $fillable = ['user_id', 'document_type', 'file_path', 'batch_ref', 'status'];
 
     public function user(): BelongsTo
     {

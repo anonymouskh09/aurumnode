@@ -95,6 +95,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/settings', [\App\Http\Controllers\Admin\SettingsController::class, 'index'])->name('settings');
     Route::post('/settings', [\App\Http\Controllers\Admin\SettingsController::class, 'update'])->name('settings.update');
     Route::get('/kyc', [KycController::class, 'index'])->name('kyc');
+    Route::get('/kyc/{document}/view', [KycController::class, 'view'])->name('kyc.view');
     Route::post('/kyc/{document}/approve', [KycController::class, 'approve'])->name('kyc.approve');
     Route::post('/kyc/{document}/reject', [KycController::class, 'reject'])->name('kyc.reject');
     Route::get('/withdrawals', [AdminWithdrawalController::class, 'index'])->name('withdrawals');
