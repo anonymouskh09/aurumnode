@@ -19,7 +19,9 @@ use App\Http\Controllers\Dashboard\DirectBonusController;
 use App\Http\Controllers\Dashboard\BinaryBonusController;
 use App\Http\Controllers\Dashboard\BinaryTreeController;
 use App\Http\Controllers\Dashboard\RoiController;
+use App\Http\Controllers\Dashboard\DocumentController as DashboardDocumentController;
 use App\Http\Controllers\Payments\CoinpaymentsController;
+use App\Http\Controllers\Admin\DocumentController as AdminDocumentController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -82,6 +84,9 @@ Route::middleware(['auth', 'user.only'])->prefix('dashboard')->name('dashboard.'
     Route::get('/binary-bonus', [BinaryBonusController::class, 'index'])->name('binary-bonus');
     Route::get('/roi', [RoiController::class, 'index'])->name('roi');
     Route::get('/rank', [\App\Http\Controllers\Dashboard\RankController::class, 'index'])->name('rank');
+    Route::get('/documents', [DashboardDocumentController::class, 'index'])->name('documents.index');
+    Route::get('/documents/{document}/read', [DashboardDocumentController::class, 'read'])->name('documents.read');
+    Route::get('/documents/{document}/download', [DashboardDocumentController::class, 'download'])->name('documents.download');
 });
 
 // Admin
@@ -98,6 +103,11 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/kyc/{document}/view', [KycController::class, 'view'])->name('kyc.view');
     Route::post('/kyc/{document}/approve', [KycController::class, 'approve'])->name('kyc.approve');
     Route::post('/kyc/{document}/reject', [KycController::class, 'reject'])->name('kyc.reject');
+    Route::get('/documents', [AdminDocumentController::class, 'index'])->name('documents.index');
+    Route::post('/documents', [AdminDocumentController::class, 'store'])->name('documents.store');
+    Route::post('/documents/{document}/toggle', [AdminDocumentController::class, 'toggle'])->name('documents.toggle');
+    Route::delete('/documents/{document}', [AdminDocumentController::class, 'destroy'])->name('documents.destroy');
+    Route::get('/documents/{document}/download', [AdminDocumentController::class, 'download'])->name('documents.download');
     Route::get('/withdrawals', [AdminWithdrawalController::class, 'index'])->name('withdrawals');
     Route::post('/withdrawals/{withdrawal}/approve', [AdminWithdrawalController::class, 'approve'])->name('withdrawals.approve');
     Route::post('/withdrawals/{withdrawal}/reject', [AdminWithdrawalController::class, 'reject'])->name('withdrawals.reject');

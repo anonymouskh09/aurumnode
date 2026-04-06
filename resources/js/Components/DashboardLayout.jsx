@@ -43,6 +43,7 @@ const navItems = [
     { href: '/dashboard/binary-bonus', label: 'Binary Bonus', icon: PieChart },
     { href: '/dashboard/roi', label: 'My ROI', icon: TrendingUp },
     { href: '/dashboard/rank', label: 'My Rank', icon: Award },
+    { href: '/dashboard/documents', label: 'Documents', icon: FileText },
 ];
 
 function NavLinks({ pathname, onLinkClick }) {

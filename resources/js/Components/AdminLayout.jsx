@@ -10,6 +10,7 @@ import {
     Menu,
     X,
     TrendingUp,
+    FileText,
 } from 'lucide-react';
 import Button from '@/Components/ui/Button';
 
@@ -36,6 +37,7 @@ const navItems = [
     { href: '/admin/audit-logs', label: 'Audit Logs', icon: FileCheck },
     { href: '/admin/withdrawals', label: 'Withdrawals', icon: CreditCard },
     { href: '/admin/kyc', label: 'KYC', icon: FileCheck },
+    { href: '/admin/documents', label: 'Documents', icon: FileText },
     { href: '/admin/top', label: 'Top', icon: TrendingUp },
     { href: '/admin/settings', label: 'Settings', icon: Settings },
 ];
