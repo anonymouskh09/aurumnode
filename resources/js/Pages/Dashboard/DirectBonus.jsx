@@ -3,7 +3,11 @@ import { Card, CardHeader, CardBody, StatCard } from '@/Components/ui';
 import { Table, TableHeader, TableBody, TableRow, Th, Td, TableEmpty } from '@/Components/ui';
 import { Gift, DollarSign } from 'lucide-react';
 
-export default function DirectBonus({ logs, totalEarned, balance }) {
+const formatPercent = (value) => `${Number(value ?? 0).toLocaleString(undefined, { maximumFractionDigits: 2 })}%`;
+
+export default function DirectBonus({ logs, totalEarned, balance, directBonusPercent = 10 }) {
+    const percentLabel = formatPercent(directBonusPercent);
+
     return (
         <DashboardLayout title="Direct Bonus">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
@@ -22,7 +26,7 @@ export default function DirectBonus({ logs, totalEarned, balance }) {
             <Card>
                 <CardHeader
                     title="Direct bonus history"
-                    subtitle="10% from each paid package purchased by your direct referrals"
+                    subtitle={`${percentLabel} from each paid package purchased by your direct referrals`}
                 />
                 <CardBody className="p-0">
                     <Table>
@@ -52,7 +56,7 @@ export default function DirectBonus({ logs, totalEarned, balance }) {
                                     </TableRow>
                                 ))
                             ) : (
-                                <TableEmpty message="No direct bonuses yet. Earn 10% when your referrals purchase packages." />
+                                <TableEmpty message={`No direct bonuses yet. Earn ${percentLabel} when your referrals purchase packages.`} />
                             )}
                         </TableBody>
                     </Table>

@@ -24,16 +24,22 @@ class AuthenticatedSessionController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
-        $credentials = $request->validate([
-            'email' => ['required', 'string', 'email'],
+        $validated = $request->validate([
+            'login' => ['required', 'string'],
             'password' => ['required', 'string'],
         ]);
 
         $remember = (bool) $request->boolean('remember');
+        $login = trim($validated['login']);
+        $loginField = filter_var($login, FILTER_VALIDATE_EMAIL) ? 'email' : 'username';
+        $credentials = [
+            $loginField => $login,
+            'password' => $validated['password'],
+        ];
 
         if (! AuthFacade::attempt($credentials, $remember)) {
             throw \Illuminate\Validation\ValidationException::withMessages([
-                'email' => __('auth.failed'),
+                'login' => __('auth.failed'),
             ]);
         }
 
@@ -41,7 +47,7 @@ class AuthenticatedSessionController extends Controller
         if ($user->is_blocked ?? false) {
             AuthFacade::logout();
             throw \Illuminate\Validation\ValidationException::withMessages([
-                'email' => 'Your account has been blocked. Please contact support.',
+                'login' => 'Your account has been blocked. Please contact support.',
             ]);
         }
 

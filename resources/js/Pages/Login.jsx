@@ -1,9 +1,11 @@
+import { useState } from 'react';
 import { Link, useForm } from '@inertiajs/react';
-import { KeyRound, Mail, ShieldCheck } from 'lucide-react';
+import { Eye, EyeOff, KeyRound, Mail, ShieldCheck } from 'lucide-react';
 
 export default function Login({ status }) {
+    const [showPassword, setShowPassword] = useState(false);
     const { data, setData, post, processing, errors } = useForm({
-        email: '',
+        login: '',
         password: '',
         remember: false,
     });
@@ -57,19 +59,20 @@ export default function Login({ status }) {
 
                         <form onSubmit={submit} className="space-y-5">
                             <div>
-                                <label htmlFor="email" className="mb-2 flex items-center gap-2 text-sm text-slate-200">
+                                <label htmlFor="login" className="mb-2 flex items-center gap-2 text-sm text-slate-200">
                                     <Mail className="h-4 w-4 text-amber-300" />
-                                    Email address
+                                    Email or username
                                 </label>
                                 <input
-                                    id="email"
-                                    type="email"
-                                    autoComplete="email"
-                                    value={data.email}
-                                    onChange={(e) => setData('email', e.target.value)}
+                                    id="login"
+                                    type="text"
+                                    autoComplete="username"
+                                    value={data.login}
+                                    onChange={(e) => setData('login', e.target.value)}
+                                    placeholder="Enter email or username"
                                     className="w-full rounded-xl border border-amber-500/30 bg-[#1a1c28]/60 px-4 py-2.5 text-slate-100 outline-none transition focus:border-amber-400 focus:ring-2 focus:ring-amber-500/20"
                                 />
-                                {errors.email && <p className="mt-1 text-sm text-red-300">{errors.email}</p>}
+                                {errors.login && <p className="mt-1 text-sm text-red-300">{errors.login}</p>}
                             </div>
 
                             <div>
@@ -77,14 +80,24 @@ export default function Login({ status }) {
                                     <KeyRound className="h-4 w-4 text-amber-300" />
                                     Password
                                 </label>
-                                <input
-                                    id="password"
-                                    type="password"
-                                    autoComplete="current-password"
-                                    value={data.password}
-                                    onChange={(e) => setData('password', e.target.value)}
-                                    className="w-full rounded-xl border border-amber-500/30 bg-[#1a1c28]/60 px-4 py-2.5 text-slate-100 outline-none transition focus:border-amber-400 focus:ring-2 focus:ring-amber-500/20"
-                                />
+                                <div className="relative">
+                                    <input
+                                        id="password"
+                                        type={showPassword ? 'text' : 'password'}
+                                        autoComplete="current-password"
+                                        value={data.password}
+                                        onChange={(e) => setData('password', e.target.value)}
+                                        className="w-full rounded-xl border border-amber-500/30 bg-[#1a1c28]/60 px-4 py-2.5 pr-12 text-slate-100 outline-none transition focus:border-amber-400 focus:ring-2 focus:ring-amber-500/20"
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowPassword((value) => !value)}
+                                        className="absolute inset-y-0 right-0 flex items-center px-4 text-slate-500 transition hover:text-slate-300"
+                                        aria-label={showPassword ? 'Hide password' : 'Show password'}
+                                    >
+                                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                    </button>
+                                </div>
                                 {errors.password && <p className="mt-1 text-sm text-red-300">{errors.password}</p>}
                             </div>
 

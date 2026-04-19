@@ -55,7 +55,7 @@ class BinaryPayoutWaterfallTest extends TestCase
         EarningsLedger::create([
             'user_id' => $user->id,
             'user_package_id' => $up5000->id,
-            'type' => EarningsLedger::TYPE_DIRECT,
+            'type' => EarningsLedger::TYPE_ROI,
             'amount' => 19000,
             'ref_id' => 'seed-up5000',
             'payout_run_id' => null,
@@ -63,7 +63,7 @@ class BinaryPayoutWaterfallTest extends TestCase
         EarningsLedger::create([
             'user_id' => $user->id,
             'user_package_id' => $up1000->id,
-            'type' => EarningsLedger::TYPE_DIRECT,
+            'type' => EarningsLedger::TYPE_ROI,
             'amount' => 3500,
             'ref_id' => 'seed-up1000',
             'payout_run_id' => null,

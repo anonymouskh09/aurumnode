@@ -18,6 +18,8 @@ class SettingsSeeder extends Seeder
             'withdrawal_fee_percent' => '2',
             'withdrawal_allowed_days' => json_encode([0, 1, 2, 3, 4, 5, 6]), // All days = any time
             'kyc_required_for_withdrawal' => '0', // When 1, user must have approved KYC to withdraw
+            // Direct bonus
+            'direct_bonus_percent' => '10',
             // Binary
             'binary_bonus_percent' => '10',
             'binary_run_at_dubai_time' => '00:00', // 12 AM Dubai
@@ -52,6 +54,9 @@ class SettingsSeeder extends Seeder
         }
         if (str_starts_with($key, 'binary_')) {
             return 'binary';
+        }
+        if (str_starts_with($key, 'direct_')) {
+            return 'direct';
         }
         if (str_starts_with($key, 'roi_') || str_starts_with($key, 'contract_')) {
             return 'roi';

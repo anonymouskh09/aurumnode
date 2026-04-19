@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Dashboard;
 
 use App\Http\Controllers\Controller;
+use App\Models\Setting;
 use App\Models\Transaction;
 use App\Services\EarningsService;
 use App\Services\WalletService;
@@ -93,6 +94,7 @@ class DashboardController extends Controller
             'investmentBalance' => round($investmentBalance, 2),
             'earningsBalance' => round($earningsBalance, 2),
             'withdrawnOutAmount' => round($totalWithdrawnOut, 2),
+            'directBonusPercent' => (float) Setting::get('direct_bonus_percent', 10),
         ]);
     }
 }

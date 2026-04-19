@@ -5,12 +5,13 @@ namespace App\Services;
 use App\Models\DirectBonusLog;
 use App\Models\EarningsLedger;
 use App\Models\Package;
+use App\Models\Setting;
 use App\Models\Transaction;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Direct bonus: 10% of referred package price, instant at purchase.
+ * Direct bonus: admin-configurable % of referred package price, instant at purchase.
  * Paid to sponsor. Cap enforced via EarningsService (hard stop at 4X).
  */
 class DirectBonusService
@@ -48,13 +49,18 @@ class DirectBonusService
             return;
         }
 
-        $bonusAmount = round($packageAmount * 0.10, 2);
+        $bonusPercent = round((float) Setting::get('direct_bonus_percent', 10), 2);
+        if ($bonusPercent <= 0) {
+            return;
+        }
+
+        $bonusAmount = round($packageAmount * ($bonusPercent / 100), 2);
         if ($bonusAmount <= 0) {
             return;
         }
 
         $refId = (string) $referredUserPackageId;
-        DB::transaction(function () use ($sponsor, $sponsorPackage, $bonusAmount, $refId, $buyer, $referredUserPackageId) {
+        DB::transaction(function () use ($sponsor, $sponsorPackage, $bonusAmount, $bonusPercent, $refId, $buyer, $referredUserPackageId) {
             $credited = $this->earningsService->credit(
                 $sponsor,
                 $sponsorPackage,
@@ -73,7 +79,7 @@ class DirectBonusService
                 'from_user_id' => $buyer->id,
                 'user_package_id' => $referredUserPackageId,
                 'amount' => $credited,
-                'percent' => 10,
+                'percent' => $bonusPercent,
             ]);
 
             $sponsor->transactions()->create([
@@ -83,7 +89,7 @@ class DirectBonusService
                     'from_user_id' => $buyer->id,
                     'from_username' => $buyer->username,
                     'from_name' => $buyer->name,
-                    'percent' => 10,
+                    'percent' => $bonusPercent,
                     'source' => 'direct_bonus',
                 ],
             ]);

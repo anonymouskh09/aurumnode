@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Dashboard;
 
 use App\Http\Controllers\Controller;
 use App\Models\DirectBonusLog;
+use App\Models\Setting;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -27,6 +28,7 @@ class DirectBonusController extends Controller
             'logs' => $logs,
             'totalEarned' => round((float) $total, 2),
             'balance' => $balance,
+            'directBonusPercent' => (float) Setting::get('direct_bonus_percent', 10),
         ]);
     }
 }

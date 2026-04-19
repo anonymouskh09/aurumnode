@@ -31,6 +31,8 @@ const walletIcons = {
     roi_wallet: DollarSign,
 };
 
+const formatPercent = (value) => `${Number(value ?? 0).toLocaleString(undefined, { maximumFractionDigits: 2 })}%`;
+
 export default function DashboardIndex({
     referralLinks,
     wallet,
@@ -43,6 +45,7 @@ export default function DashboardIndex({
     investmentBalance,
     earningsBalance,
     withdrawnOutAmount = 0,
+    directBonusPercent = 10,
 }) {
     const totalEarned = parseFloat(wallet?.total_bonus ?? 0) + parseFloat(wallet?.total_roi ?? 0);
     const inv = parseFloat(totalInvestment ?? 0);
@@ -55,7 +58,7 @@ export default function DashboardIndex({
         { key: 'deposit_wallet', label: 'Deposit Wallet (USDT)', subtitle: 'Use for packages or transfer to users', locked: false },
         { key: 'investment_wallet', label: 'My Package', subtitle: 'Withdrawal not available', locked: true },
         { key: 'withdrawal_wallet', label: 'Withdrawal Wallet', subtitle: 'Ready to withdraw', locked: false },
-        { key: 'direct_bonus_wallet', label: 'Direct Bonus', subtitle: '10% from referrals', locked: false },
+        { key: 'direct_bonus_wallet', label: 'Direct Bonus', subtitle: `${formatPercent(directBonusPercent)} from referrals`, locked: false },
         { key: 'binary_bonus_wallet', label: 'Binary Bonus', subtitle: 'Daily matching bonus', locked: false },
         { key: 'roi_wallet', label: 'ROI Wallet', subtitle: 'Returns on investment', locked: false },
     ];

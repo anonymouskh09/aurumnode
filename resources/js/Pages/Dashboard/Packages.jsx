@@ -4,13 +4,15 @@ import { Card, CardBody, Button } from '@/Components/ui';
 import { Package, Wallet } from 'lucide-react';
 
 const packageMetaByPrice = {
-    100: { weekly: 'up to 2%', monthly: 'up to 8%', cap: '4X', directBonus: '10%', binaryBonus: '8%' },
-    500: { weekly: 'up to 2.25%', monthly: 'up to 9%', cap: '4X', directBonus: '10%', binaryBonus: '8%' },
-    1000: { weekly: 'up to 2.5%', monthly: 'up to 10%', cap: '4X', directBonus: '10%', binaryBonus: '8%' },
-    2500: { weekly: 'up to 2.75%', monthly: 'up to 11%', cap: '4X', directBonus: '10%', binaryBonus: '9%' },
-    5000: { weekly: 'up to 3%', monthly: 'up to 12%', cap: '4X', directBonus: '10%', binaryBonus: '9%' },
-    10000: { weekly: 'up to 3%', monthly: 'up to 12%', cap: '4X', directBonus: '10%', binaryBonus: '10%' },
+    100: { weekly: 'up to 2%', monthly: 'up to 8%', cap: '4X', binaryBonus: '8%' },
+    500: { weekly: 'up to 2.25%', monthly: 'up to 9%', cap: '4X', binaryBonus: '8%' },
+    1000: { weekly: 'up to 2.5%', monthly: 'up to 10%', cap: '4X', binaryBonus: '8%' },
+    2500: { weekly: 'up to 2.75%', monthly: 'up to 11%', cap: '4X', binaryBonus: '9%' },
+    5000: { weekly: 'up to 3%', monthly: 'up to 12%', cap: '4X', binaryBonus: '9%' },
+    10000: { weekly: 'up to 3%', monthly: 'up to 12%', cap: '4X', binaryBonus: '10%' },
 };
+
+const formatPercent = (value) => `${Number(value ?? 0).toLocaleString(undefined, { maximumFractionDigits: 2 })}%`;
 
 export default function Packages({
     packages,
@@ -22,6 +24,7 @@ export default function Packages({
     coinpayments_default_pay_currency = 'USDT.TRC20',
     coinpayments_enabled = false,
     recent_deposit_intents = [],
+    direct_bonus_percent = 10,
 }) {
     const depositBalance = parseFloat(deposit_balance_usdt ?? 0);
     const withdrawalBalance = parseFloat(withdrawal_balance_usdt ?? 0);
@@ -85,6 +88,7 @@ export default function Packages({
                         depositBalance={depositBalance}
                         withdrawalBalance={withdrawalBalance}
                         highestPurchasedAmount={highestPurchasedAmount}
+                        directBonusPercent={direct_bonus_percent}
                     />
                 ))}
             </div>
@@ -143,7 +147,7 @@ function CoinpaymentsDepositForm({ minDeposit, enabled, allowedPayCurrencies, de
     );
 }
 
-function PackageCard({ pkg, depositBalance, withdrawalBalance, highestPurchasedAmount }) {
+function PackageCard({ pkg, depositBalance, withdrawalBalance, highestPurchasedAmount, directBonusPercent }) {
     const { data, setData, post, processing } = useForm({
         package_id: pkg.id,
         pay_from: 'deposit_wallet',
@@ -155,6 +159,7 @@ function PackageCard({ pkg, depositBalance, withdrawalBalance, highestPurchasedA
     const blockedByUpgradeRule = highestPurchasedAmount > 0 && price < highestPurchasedAmount;
     const canBuyNow = pkg.status === 'active' && canAfford && !blockedByUpgradeRule;
     const packageMeta = packageMetaByPrice[Math.round(price)] ?? null;
+    const directBonusLabel = formatPercent(directBonusPercent);
 
     return (
         <Card className="overflow-hidden transition-all duration-200 hover:shadow-md hover:-translate-y-0.5">
@@ -190,7 +195,7 @@ function PackageCard({ pkg, depositBalance, withdrawalBalance, highestPurchasedA
                             </div>
                             <div className="rounded-md border border-amber-500/15 bg-[#20263a] px-2 py-1.5">
                                 <p className="text-slate-400">Direct Bonus</p>
-                                <p className="font-medium text-slate-100">{packageMeta.directBonus}</p>
+                                <p className="font-medium text-slate-100">{directBonusLabel}</p>
                             </div>
                             <div className="col-span-2 rounded-md border border-amber-500/15 bg-[#20263a] px-2 py-1.5">
                                 <p className="text-slate-400">Binary Bonus</p>

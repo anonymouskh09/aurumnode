@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Dashboard;
 use App\Http\Controllers\Controller;
 use App\Models\CoinpaymentDepositIntent;
 use App\Models\Package;
+use App\Models\Setting;
 use App\Services\PackagePurchaseService;
 use App\Services\WalletService;
 use Illuminate\Http\RedirectResponse;
@@ -59,6 +60,7 @@ class PackageController extends Controller
             'coinpayments_default_pay_currency' => (string) config('services.coinpayments.default_pay_currency', 'USDT.TRC20'),
             'coinpayments_enabled' => (bool) config('services.coinpayments.enabled', false),
             'recent_deposit_intents' => $recentDepositIntents,
+            'direct_bonus_percent' => (float) Setting::get('direct_bonus_percent', 10),
         ]);
     }
 

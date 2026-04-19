@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\DB;
 
 /**
  * Single source of truth for all earnings. All credits go through this service.
- * Enforces 4X cap: total_earnings = SUM(earnings_ledger) per user_package.
+ * Enforces 4X cap from cap-counted earnings per user_package.
  * Cap = package price * cap_multiplier (default 4). Hard stop at cap.
  */
 class EarningsService
@@ -20,11 +20,15 @@ class EarningsService
     ) {}
 
     /**
-     * Total earnings for a specific user_package (from ledger only).
+     * Cap-counted earnings for a specific user_package (from ledger only).
+     * Direct bonus is intentionally excluded so it can require an active package
+     * without consuming the package's 4X earning room.
      */
     public function getTotalEarningsForPackage(int $userPackageId): float
     {
-        return (float) EarningsLedger::where('user_package_id', $userPackageId)->sum('amount');
+        return (float) EarningsLedger::where('user_package_id', $userPackageId)
+            ->whereIn('type', $this->capTrackedTypes())
+            ->sum('amount');
     }
 
     /**
@@ -86,20 +90,26 @@ class EarningsService
             default => throw new \InvalidArgumentException("Unknown earnings type: {$type}"),
         };
 
-        $remaining = $this->getRemainingCap($userPackage);
-        if ($remaining <= 0) {
-            $this->expirePackageIfNotAlready($userPackage);
-            return 0.0;
+        $countsTowardCap = $this->countsTowardCap($type);
+        if ($countsTowardCap) {
+            $remaining = $this->getRemainingCap($userPackage);
+            if ($remaining <= 0) {
+                $this->expirePackageIfNotAlready($userPackage);
+                return 0.0;
+            }
+
+            $creditAmount = min($amount, $remaining);
+        } else {
+            $creditAmount = $amount;
         }
 
-        $creditAmount = min($amount, $remaining);
         $creditAmount = round($creditAmount, 2);
         if ($creditAmount <= 0) {
             return 0.0;
         }
 
         try {
-            DB::transaction(function () use ($user, $userPackage, $type, $creditAmount, $refId, $payoutRunId, $walletColumn) {
+            DB::transaction(function () use ($user, $userPackage, $type, $creditAmount, $refId, $payoutRunId, $walletColumn, $countsTowardCap) {
                 EarningsLedger::create([
                     'user_id' => $user->id,
                     'user_package_id' => $userPackage->id,
@@ -117,12 +127,14 @@ class EarningsService
                     $user->wallet->increment('total_roi', $creditAmount);
                 }
 
-                $userPackage->increment('total_earned', $creditAmount);
+                if ($countsTowardCap) {
+                    $userPackage->increment('total_earned', $creditAmount);
 
-                $newTotal = $this->getTotalEarningsForPackage($userPackage->id);
-                $cap = $this->getPackageCap($userPackage);
-                if ($newTotal >= $cap) {
-                    $this->expirePackageIfNotAlready($userPackage);
+                    $newTotal = $this->getTotalEarningsForPackage($userPackage->id);
+                    $cap = $this->getPackageCap($userPackage);
+                    if ($newTotal >= $cap) {
+                        $this->expirePackageIfNotAlready($userPackage);
+                    }
                 }
             });
         } catch (\Illuminate\Database\QueryException $e) {
@@ -133,6 +145,24 @@ class EarningsService
         }
 
         return $creditAmount;
+    }
+
+    /**
+     * Earnings types that consume package 4X room.
+     *
+     * @return array<int, string>
+     */
+    private function capTrackedTypes(): array
+    {
+        return [
+            EarningsLedger::TYPE_BINARY,
+            EarningsLedger::TYPE_ROI,
+        ];
+    }
+
+    private function countsTowardCap(string $type): bool
+    {
+        return in_array($type, $this->capTrackedTypes(), true);
     }
 
     /**
