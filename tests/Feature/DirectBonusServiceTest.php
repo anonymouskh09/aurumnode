@@ -119,6 +119,99 @@ class DirectBonusServiceTest extends TestCase
         $this->assertSame(UserPackage::STATUS_EXPIRED_BY_4X, $earningPackage->status);
     }
 
+    public function test_direct_bonus_is_paid_to_free_sponsor_with_active_leader_package(): void
+    {
+        Setting::set('direct_bonus_percent', 10);
+
+        $sponsor = User::factory()->create(['status' => User::STATUS_FREE]);
+        $this->createWallet($sponsor);
+
+        $leaderPackage = Package::create([
+            'name' => 'Access Package (Leader)',
+            'display_name' => 'Access Package',
+            'price_usd' => 1000,
+            'status' => 'active',
+            'is_leader' => true,
+            'is_admin_only' => true,
+            'power_leg_points' => 1000000,
+            'roi_enabled' => false,
+            'monthly_roi_rate' => 0,
+            'binary_percent' => null,
+            'pays_direct_bonus' => true,
+            'points_pass_up' => false,
+        ]);
+
+        $leaderUserPackage = UserPackage::create([
+            'user_id' => $sponsor->id,
+            'package_id' => $leaderPackage->id,
+            'invested_amount' => 1000,
+            'activated_at' => now(),
+            'status' => UserPackage::STATUS_ACTIVE,
+            'total_earned' => 0,
+            'max_cap' => 4000,
+            'cap_multiplier' => 4,
+            'leader_activation_mode' => UserPackage::LEADER_MODE_ADMIN_GRANTED,
+            'is_maxed_out' => false,
+        ]);
+        $sponsor->update(['active_package_id' => $leaderUserPackage->id]);
+
+        $buyer = User::factory()->create([
+            'sponsor_id' => $sponsor->id,
+            'status' => User::STATUS_PAID,
+        ]);
+        $buyerPackage = $this->createPackage('Buyer Package', 200);
+        $buyerUserPackage = UserPackage::create([
+            'user_id' => $buyer->id,
+            'package_id' => $buyerPackage->id,
+            'invested_amount' => 200,
+            'activated_at' => now(),
+            'status' => UserPackage::STATUS_ACTIVE,
+            'total_earned' => 0,
+            'max_cap' => 800,
+            'cap_multiplier' => 4,
+            'is_maxed_out' => false,
+        ]);
+
+        $this->directBonusService->processDirectBonus($buyer, 200.0, $buyerUserPackage->id, $buyerPackage);
+
+        $sponsor->refresh();
+
+        $this->assertEqualsWithDelta(20.0, (float) $sponsor->wallet->direct_bonus_wallet, 0.01);
+        $this->assertSame(1, DirectBonusLog::where('user_id', $sponsor->id)->count());
+    }
+
+    public function test_direct_bonus_is_skipped_for_free_sponsor_without_leader_package(): void
+    {
+        Setting::set('direct_bonus_percent', 10);
+
+        $sponsor = User::factory()->create(['status' => User::STATUS_FREE]);
+        $this->createWallet($sponsor);
+
+        $buyer = User::factory()->create([
+            'sponsor_id' => $sponsor->id,
+            'status' => User::STATUS_PAID,
+        ]);
+        $buyerPackage = $this->createPackage('Buyer Package', 200);
+        $buyerUserPackage = UserPackage::create([
+            'user_id' => $buyer->id,
+            'package_id' => $buyerPackage->id,
+            'invested_amount' => 200,
+            'activated_at' => now(),
+            'status' => UserPackage::STATUS_ACTIVE,
+            'total_earned' => 0,
+            'max_cap' => 800,
+            'cap_multiplier' => 4,
+            'is_maxed_out' => false,
+        ]);
+
+        $this->directBonusService->processDirectBonus($buyer, 200.0, $buyerUserPackage->id, $buyerPackage);
+
+        $sponsor->refresh();
+
+        $this->assertEqualsWithDelta(0.0, (float) $sponsor->wallet->direct_bonus_wallet, 0.01);
+        $this->assertSame(0, DirectBonusLog::where('user_id', $sponsor->id)->count());
+    }
+
     public function test_direct_bonus_is_skipped_without_an_active_sponsor_package(): void
     {
         $sponsor = User::factory()->create(['status' => User::STATUS_PAID]);

@@ -8,6 +8,7 @@ use App\Models\Package;
 use App\Models\Setting;
 use App\Models\Transaction;
 use App\Models\User;
+use App\Models\UserPackage;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -36,7 +37,7 @@ class DirectBonusService
             return;
         }
 
-        if (! $sponsor->isPaid()) {
+        if (! $this->sponsorQualifiesForDirectBonus($sponsor)) {
             return;
         }
 
@@ -97,19 +98,36 @@ class DirectBonusService
     }
 
     /**
+     * Sponsor must be a paid member OR hold an active leader (Access) package.
+     */
+    private function sponsorQualifiesForDirectBonus(User $sponsor): bool
+    {
+        if ($sponsor->isPaid()) {
+            return true;
+        }
+
+        return $sponsor->userPackages()
+            ->where('status', UserPackage::STATUS_ACTIVE)
+            ->where('is_maxed_out', false)
+            ->whereHas('package', fn ($q) => $q->where('is_leader', true))
+            ->exists();
+    }
+
+    /**
      * Sponsor's user_package that is currently earning (for cap and credit).
      */
-    private function getEarningUserPackage(User $sponsor): ?\App\Models\UserPackage
+    private function getEarningUserPackage(User $sponsor): ?UserPackage
     {
         $activeId = $sponsor->active_package_id;
         if ($activeId) {
-            $up = \App\Models\UserPackage::find($activeId);
+            $up = UserPackage::find($activeId);
             if ($up && $up->isEarning()) {
                 return $up;
             }
         }
+
         return $sponsor->userPackages()
-            ->where('status', \App\Models\UserPackage::STATUS_ACTIVE)
+            ->where('status', UserPackage::STATUS_ACTIVE)
             ->where('is_maxed_out', false)
             ->with('package')
             ->orderByDesc('invested_amount')
