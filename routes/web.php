@@ -1,27 +1,27 @@
 <?php
 
+use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
+use App\Http\Controllers\Admin\DocumentController as AdminDocumentController;
+use App\Http\Controllers\Admin\KycController;
+use App\Http\Controllers\Admin\WithdrawalController as AdminWithdrawalController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\NewPasswordController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
 use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\ContactController;
-use App\Http\Controllers\Dashboard\DashboardController;
-use App\Http\Controllers\Dashboard\PackageController;
-use App\Http\Controllers\Dashboard\ProfileController;
-use App\Http\Controllers\Dashboard\TeamController;
-use App\Http\Controllers\Dashboard\WithdrawalController;
-use App\Http\Controllers\Dashboard\TransferController;
-use App\Http\Controllers\Dashboard\TransactionController;
-use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
-use App\Http\Controllers\Admin\KycController;
-use App\Http\Controllers\Admin\WithdrawalController as AdminWithdrawalController;
-use App\Http\Controllers\Dashboard\DirectBonusController;
 use App\Http\Controllers\Dashboard\BinaryBonusController;
 use App\Http\Controllers\Dashboard\BinaryTreeController;
-use App\Http\Controllers\Dashboard\RoiController;
+use App\Http\Controllers\Dashboard\DashboardController;
+use App\Http\Controllers\Dashboard\DirectBonusController;
 use App\Http\Controllers\Dashboard\DocumentController as DashboardDocumentController;
+use App\Http\Controllers\Dashboard\PackageController;
+use App\Http\Controllers\Dashboard\ProfileController;
+use App\Http\Controllers\Dashboard\RoiController;
+use App\Http\Controllers\Dashboard\TeamController;
+use App\Http\Controllers\Dashboard\TransactionController;
+use App\Http\Controllers\Dashboard\TransferController;
+use App\Http\Controllers\Dashboard\WithdrawalController;
 use App\Http\Controllers\Payments\CoinpaymentsController;
-use App\Http\Controllers\Admin\DocumentController as AdminDocumentController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -123,6 +123,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::post('/user-package-controls/{member}/resume-earnings', [\App\Http\Controllers\Admin\UserPackageControlsController::class, 'resumeEarnings'])->name('user-package-controls.resume');
     Route::get('/volume', [\App\Http\Controllers\Admin\VolumeController::class, 'index'])->name('volume.index');
     Route::post('/volume/add', [\App\Http\Controllers\Admin\VolumeController::class, 'add'])->name('volume.add');
+    Route::post('/volume/subtract', [\App\Http\Controllers\Admin\VolumeController::class, 'subtract'])->name('volume.subtract');
     Route::get('/earnings-ledger', [\App\Http\Controllers\Admin\EarningsLedgerController::class, 'index'])->name('earnings-ledger.index');
     Route::get('/payout-runs', [\App\Http\Controllers\Admin\PayoutRunsController::class, 'index'])->name('payout-runs.index');
     Route::post('/payout-runs/run-binary', [\App\Http\Controllers\Admin\PayoutRunsController::class, 'runBinary'])->name('payout-runs.run-binary');

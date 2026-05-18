@@ -95,6 +95,34 @@ class VolumeController extends Controller
             ->with('status', 'Volume added.');
     }
 
+    public function subtract(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'user_id' => ['required', 'exists:users,id'],
+            'leg' => ['required', 'in:left,right'],
+            'points' => ['required', 'numeric', 'min:0.01'],
+            'reason' => ['nullable', 'string', 'max:255'],
+        ]);
+
+        $user = User::findOrFail($validated['user_id']);
+        $this->volumeService->removeVolume(
+            $user,
+            $validated['leg'],
+            (float) $validated['points'],
+            $request->user(),
+            $validated['reason'] ?? 'Manual remove by admin'
+        );
+
+        $redirectParams = ['user_id' => $user->id];
+        if ($request->filled('search')) {
+            $redirectParams['search'] = $request->input('search');
+        }
+
+        return redirect()
+            ->route('admin.volume.index', $redirectParams)
+            ->with('status', 'Volume removed.');
+    }
+
     private function hydrateUserForVolume(User $user): void
     {
         $user->load('userPackages.package');

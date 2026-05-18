@@ -6,10 +6,12 @@ export default function AdminVolumeIndex({ user, searchResults = [], filters = {
     const { flash } = usePage().props;
     const searchForm = useForm({ search: filters?.search ?? '' });
     const addForm = useForm({ user_id: user?.id ?? '', leg: 'left', amount_usdt: '', reason: '' });
+    const removeForm = useForm({ user_id: user?.id ?? '', leg: 'left', amount_usdt: '', reason: '' });
 
     useEffect(() => {
         if (user?.id) {
             addForm.setData('user_id', user.id);
+            removeForm.setData('user_id', user.id);
         }
     }, [user?.id]);
 
@@ -121,6 +123,7 @@ export default function AdminVolumeIndex({ user, searchResults = [], filters = {
                             </p>
                         </div>
 
+                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                         <div className="rounded-xl border border-slate-700 bg-slate-900/50 p-4">
                             <h3 className="mb-2 font-semibold text-white">Add volume</h3>
                             <form
@@ -167,6 +170,58 @@ export default function AdminVolumeIndex({ user, searchResults = [], filters = {
                                     Add volume
                                 </button>
                             </form>
+                        </div>
+
+                        <div className="rounded-xl border border-red-900/50 bg-slate-900/50 p-4">
+                            <h3 className="mb-2 font-semibold text-white">Remove volume</h3>
+                            <form
+                                onSubmit={(e) => {
+                                    e.preventDefault();
+                                    if (!window.confirm('Remove this volume from the selected leg?')) {
+                                        return;
+                                    }
+                                    router.post('/admin/volume/subtract', {
+                                        ...removeForm.data,
+                                        user_id: user.id,
+                                        points: removeForm.data.amount_usdt,
+                                        search: filters?.search || undefined,
+                                    });
+                                }}
+                                className="max-w-sm space-y-2"
+                            >
+                                <select
+                                    value={removeForm.data.leg}
+                                    onChange={(e) => removeForm.setData('leg', e.target.value)}
+                                    className="w-full rounded-lg border border-slate-600 bg-slate-800 px-3 py-2 text-white"
+                                >
+                                    <option value="left">Left leg</option>
+                                    <option value="right">Right leg</option>
+                                </select>
+                                <input
+                                    type="number"
+                                    step="0.01"
+                                    min="0.01"
+                                    placeholder="Amount (USDT)"
+                                    value={removeForm.data.amount_usdt}
+                                    onChange={(e) => removeForm.setData('amount_usdt', e.target.value)}
+                                    className="w-full rounded-lg border border-slate-600 bg-slate-800 px-3 py-2 text-white"
+                                    required
+                                />
+                                <input
+                                    type="text"
+                                    placeholder="Reason (audit)"
+                                    value={removeForm.data.reason}
+                                    onChange={(e) => removeForm.setData('reason', e.target.value)}
+                                    className="w-full rounded-lg border border-slate-600 bg-slate-800 px-3 py-2 text-white"
+                                />
+                                <button
+                                    type="submit"
+                                    className="rounded-lg bg-red-600 px-4 py-2 text-white hover:bg-red-500"
+                                >
+                                    Remove volume
+                                </button>
+                            </form>
+                        </div>
                         </div>
                     </>
                 )}
