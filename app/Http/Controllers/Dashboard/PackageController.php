@@ -28,7 +28,12 @@ class PackageController extends Controller
             ->where('is_leader', false)
             ->orderBy('price_usd')
             ->get()
-            ->map(fn ($p) => array_merge($p->toArray(), ['display_name' => $p->getDisplayName()]));
+            ->map(fn ($p) => array_merge($p->toArray(), [
+                'display_name' => $p->getDisplayName(),
+                'weekly_roi_percent' => $p->roi_enabled ? $p->getWeeklyRoiRate() : 0,
+                'monthly_roi_percent' => $p->roi_enabled ? (float) ($p->monthly_roi_rate ?? 0) : 0,
+                'binary_percent_display' => $p->getBinaryPercent(),
+            ]));
 
         $wallet = $this->walletService->getOrCreateWallet($user);
         $depositBalance = (float) $wallet->deposit_wallet;
@@ -93,5 +98,4 @@ class PackageController extends Controller
 
         return redirect()->route('dashboard.index')->with('status', 'Package purchased successfully.');
     }
-
 }

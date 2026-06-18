@@ -3,15 +3,6 @@ import DashboardLayout from '@/Components/DashboardLayout';
 import { Card, CardBody, Button } from '@/Components/ui';
 import { Package, Wallet } from 'lucide-react';
 
-const packageMetaByPrice = {
-    100: { weekly: 'up to 2%', monthly: 'up to 8%', cap: '4X', binaryBonus: '8%' },
-    500: { weekly: 'up to 2.25%', monthly: 'up to 9%', cap: '4X', binaryBonus: '8%' },
-    1000: { weekly: 'up to 2.5%', monthly: 'up to 10%', cap: '4X', binaryBonus: '8%' },
-    2500: { weekly: 'up to 2.75%', monthly: 'up to 11%', cap: '4X', binaryBonus: '9%' },
-    5000: { weekly: 'up to 3%', monthly: 'up to 12%', cap: '4X', binaryBonus: '9%' },
-    10000: { weekly: 'up to 3%', monthly: 'up to 12%', cap: '4X', binaryBonus: '10%' },
-};
-
 const formatPercent = (value) => `${Number(value ?? 0).toLocaleString(undefined, { maximumFractionDigits: 2 })}%`;
 
 export default function Packages({
@@ -158,7 +149,10 @@ function PackageCard({ pkg, depositBalance, withdrawalBalance, highestPurchasedA
     const canAfford = balanceFromSource >= price;
     const blockedByUpgradeRule = highestPurchasedAmount > 0 && price < highestPurchasedAmount;
     const canBuyNow = pkg.status === 'active' && canAfford && !blockedByUpgradeRule;
-    const packageMeta = packageMetaByPrice[Math.round(price)] ?? null;
+    const roiEnabled = pkg.roi_enabled !== false && pkg.roi_enabled !== 0;
+    const weeklyRoiLabel = roiEnabled ? formatPercent(pkg.weekly_roi_percent) : '—';
+    const monthlyRoiLabel = roiEnabled ? formatPercent(pkg.monthly_roi_percent) : '—';
+    const binaryBonusLabel = formatPercent(pkg.binary_percent_display ?? pkg.binary_percent);
     const directBonusLabel = formatPercent(directBonusPercent);
 
     return (
@@ -177,33 +171,31 @@ function PackageCard({ pkg, depositBalance, withdrawalBalance, highestPurchasedA
                 ) : (
                     <p className="text-sm text-amber-300 mt-1">Available for purchase.</p>
                 )}
-                {packageMeta && (
-                    <div className="mt-3 rounded-lg border border-amber-500/20 bg-[#1a1c28] p-3">
-                        <p className="mb-2 text-xs uppercase tracking-wide text-amber-300">Package details</p>
-                        <div className="grid grid-cols-2 gap-2 text-xs sm:text-sm">
-                            <div className="rounded-md border border-amber-500/15 bg-[#20263a] px-2 py-1.5">
-                                <p className="text-slate-400">Weekly</p>
-                                <p className="font-medium text-slate-100">{packageMeta.weekly}</p>
-                            </div>
-                            <div className="rounded-md border border-amber-500/15 bg-[#20263a] px-2 py-1.5">
-                                <p className="text-slate-400">Monthly</p>
-                                <p className="font-medium text-slate-100">{packageMeta.monthly}</p>
-                            </div>
-                            <div className="rounded-md border border-amber-500/15 bg-[#20263a] px-2 py-1.5">
-                                <p className="text-slate-400">Total Cap</p>
-                                <p className="font-medium text-slate-100">{packageMeta.cap}</p>
-                            </div>
-                            <div className="rounded-md border border-amber-500/15 bg-[#20263a] px-2 py-1.5">
-                                <p className="text-slate-400">Direct Bonus</p>
-                                <p className="font-medium text-slate-100">{directBonusLabel}</p>
-                            </div>
-                            <div className="col-span-2 rounded-md border border-amber-500/15 bg-[#20263a] px-2 py-1.5">
-                                <p className="text-slate-400">Binary Bonus</p>
-                                <p className="font-medium text-slate-100">{packageMeta.binaryBonus}</p>
-                            </div>
+                <div className="mt-3 rounded-lg border border-amber-500/20 bg-[#1a1c28] p-3">
+                    <p className="mb-2 text-xs uppercase tracking-wide text-amber-300">Package details</p>
+                    <div className="grid grid-cols-2 gap-2 text-xs sm:text-sm">
+                        <div className="rounded-md border border-amber-500/15 bg-[#20263a] px-2 py-1.5">
+                            <p className="text-slate-400">Weekly</p>
+                            <p className="font-medium text-slate-100">{weeklyRoiLabel}</p>
+                        </div>
+                        <div className="rounded-md border border-amber-500/15 bg-[#20263a] px-2 py-1.5">
+                            <p className="text-slate-400">Monthly</p>
+                            <p className="font-medium text-slate-100">{monthlyRoiLabel}</p>
+                        </div>
+                        <div className="rounded-md border border-amber-500/15 bg-[#20263a] px-2 py-1.5">
+                            <p className="text-slate-400">Total Cap</p>
+                            <p className="font-medium text-slate-100">4X</p>
+                        </div>
+                        <div className="rounded-md border border-amber-500/15 bg-[#20263a] px-2 py-1.5">
+                            <p className="text-slate-400">Direct Bonus</p>
+                            <p className="font-medium text-slate-100">{directBonusLabel}</p>
+                        </div>
+                        <div className="col-span-2 rounded-md border border-amber-500/15 bg-[#20263a] px-2 py-1.5">
+                            <p className="text-slate-400">Binary Bonus</p>
+                            <p className="font-medium text-slate-100">{binaryBonusLabel}</p>
                         </div>
                     </div>
-                )}
+                </div>
                 <div className="mt-3">
                     <label className="block text-xs font-medium text-slate-300 mb-1">Pay from</label>
                     <select
