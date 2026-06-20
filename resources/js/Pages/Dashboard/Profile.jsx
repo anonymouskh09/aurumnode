@@ -36,8 +36,8 @@ export default function Profile({ auth, kycDocuments, errors: serverErrors }) {
                                 {err('email') && <p className="text-sm text-red-600 mt-1">{err('email')}</p>}
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-slate-300 mb-1">USDT withdrawal address</label>
-                                <input type="text" value={profileForm.data.usdt_address} onChange={(e) => profileForm.setData('usdt_address', e.target.value)} placeholder="Enter USDT address" className={inputClass} />
+                                <label className="block text-sm font-medium text-slate-300 mb-1">USDT BEP20 withdrawal address</label>
+                                <input type="text" value={profileForm.data.usdt_address} onChange={(e) => profileForm.setData('usdt_address', e.target.value)} placeholder="Enter USDT BEP20 address" className={inputClass} />
                                 {err('usdt_address') && <p className="text-sm text-red-600 mt-1">{err('usdt_address')}</p>}
                             </div>
                             <Button type="submit" variant="primary" disabled={profileForm.processing}>Save</Button>

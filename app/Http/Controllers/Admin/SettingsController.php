@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Package;
 use App\Models\Setting;
+use App\Services\WithdrawalFeeService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -20,11 +21,14 @@ class SettingsController extends Controller
     {
         $settings = Setting::getAllCached();
         $packages = Package::orderBy('price_usd')->get(['id', 'name', 'price_usd', 'roi_enabled', 'roi_weekly_percent']);
+        $withdrawalFees = app(WithdrawalFeeService::class)->getSettings();
 
         return Inertia::render('Admin/Settings', [
             'settings' => [
                 'withdrawal_min_usd' => Setting::get('withdrawal_min_usd', 20),
-                'withdrawal_fee_percent' => Setting::get('withdrawal_fee_percent', 2),
+                'withdrawal_fee_threshold_usd' => $withdrawalFees['threshold_usd'],
+                'withdrawal_fee_percent_below' => $withdrawalFees['percent_below'],
+                'withdrawal_fee_percent_at_or_above' => $withdrawalFees['percent_at_or_above'],
                 'withdrawal_allowed_days' => Setting::get('withdrawal_allowed_days', [0, 1, 2, 3, 4, 5, 6]),
                 'kyc_required_for_withdrawal' => (bool) Setting::get('kyc_required_for_withdrawal', false),
                 'direct_bonus_percent' => Setting::get('direct_bonus_percent', 10),
@@ -44,7 +48,9 @@ class SettingsController extends Controller
     {
         $validated = $request->validate([
             'withdrawal_min_usd' => ['sometimes', 'numeric', 'min:0'],
-            'withdrawal_fee_percent' => ['sometimes', 'numeric', 'min:0', 'max:100'],
+            'withdrawal_fee_threshold_usd' => ['sometimes', 'numeric', 'min:0.01'],
+            'withdrawal_fee_percent_below' => ['sometimes', 'numeric', 'min:0', 'max:100'],
+            'withdrawal_fee_percent_at_or_above' => ['sometimes', 'numeric', 'min:0', 'max:100'],
             'withdrawal_allowed_days' => ['sometimes', 'array'],
             'withdrawal_allowed_days.*' => ['integer', 'min:0', 'max:6'],
             'kyc_required_for_withdrawal' => ['sometimes', 'boolean'],

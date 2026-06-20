@@ -8,7 +8,9 @@ const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 export default function AdminSettings({ settings, packages }) {
     const form = useForm({
         withdrawal_min_usd: settings?.withdrawal_min_usd ?? 20,
-        withdrawal_fee_percent: settings?.withdrawal_fee_percent ?? 2,
+        withdrawal_fee_threshold_usd: settings?.withdrawal_fee_threshold_usd ?? 100,
+        withdrawal_fee_percent_below: settings?.withdrawal_fee_percent_below ?? 10,
+        withdrawal_fee_percent_at_or_above: settings?.withdrawal_fee_percent_at_or_above ?? 3,
         withdrawal_allowed_days: settings?.withdrawal_allowed_days ?? [0, 1, 2, 3, 4, 5, 6],
         kyc_required_for_withdrawal: settings?.kyc_required_for_withdrawal ?? false,
         direct_bonus_percent: settings?.direct_bonus_percent ?? 10,
@@ -40,8 +42,19 @@ export default function AdminSettings({ settings, packages }) {
                             <input type="number" step="0.01" min="0" value={form.data.withdrawal_min_usd} onChange={(e) => form.setData('withdrawal_min_usd', e.target.value)} className="w-full rounded-lg border border-slate-300 px-3 py-2" />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-1">Fee % (company withdrawals)</label>
-                            <input type="number" step="0.01" min="0" max="100" value={form.data.withdrawal_fee_percent} onChange={(e) => form.setData('withdrawal_fee_percent', e.target.value)} className="w-full rounded-lg border border-slate-300 px-3 py-2" />
+                            <label className="block text-sm font-medium text-slate-700 mb-1">Fee threshold (USD)</label>
+                            <input type="number" step="0.01" min="0.01" value={form.data.withdrawal_fee_threshold_usd} onChange={(e) => form.setData('withdrawal_fee_threshold_usd', e.target.value)} className="w-full rounded-lg border border-slate-300 px-3 py-2" />
+                            <p className="text-xs text-slate-500 mt-1">Amounts below this use the lower-tier fee; at or above use the higher-tier fee.</p>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label className="block text-sm font-medium text-slate-700 mb-1">Fee % below threshold</label>
+                                <input type="number" step="0.01" min="0" max="100" value={form.data.withdrawal_fee_percent_below} onChange={(e) => form.setData('withdrawal_fee_percent_below', e.target.value)} className="w-full rounded-lg border border-slate-300 px-3 py-2" />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-slate-700 mb-1">Fee % at or above threshold</label>
+                                <input type="number" step="0.01" min="0" max="100" value={form.data.withdrawal_fee_percent_at_or_above} onChange={(e) => form.setData('withdrawal_fee_percent_at_or_above', e.target.value)} className="w-full rounded-lg border border-slate-300 px-3 py-2" />
+                            </div>
                         </div>
                         <div>
                             <label className="block text-sm font-medium text-slate-700 mb-2">Allowed days (uncheck to restrict; all checked = any time)</label>

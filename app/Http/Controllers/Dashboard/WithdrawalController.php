@@ -6,8 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Mail\WithdrawalRequestedMail;
 use App\Models\Setting;
 use App\Models\Transaction;
-use App\Models\Withdrawal;
 use App\Services\WalletService;
+use App\Services\WithdrawalFeeService;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -18,13 +18,15 @@ use Inertia\Inertia;
 use Inertia\Response;
 
 /**
- * Withdrawals: min amount and allowed days from settings.
- * 2% fee for company (external) withdrawals; 0% for internal transfer.
+ * Withdrawals: min amount, allowed days, tiered fee from settings.
  */
 class WithdrawalController extends Controller
 {
+    private const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
     public function __construct(
-        private WalletService $walletService
+        private WalletService $walletService,
+        private WithdrawalFeeService $withdrawalFeeService
     ) {}
 
     public function index(Request $request): Response
@@ -34,10 +36,11 @@ class WithdrawalController extends Controller
         $withdrawals = $user->withdrawals()->latest()->get();
 
         $minUsd = (float) Setting::get('withdrawal_min_usd', 20);
-        $allowedDays = Setting::get('withdrawal_allowed_days', [0, 1, 2, 3, 4, 5, 6]);
-        $feePercent = (float) Setting::get('withdrawal_fee_percent', 2);
-        $todayDubai = (int) Carbon::now('Asia/Dubai')->format('N'); // 1=Mon, 7=Sun (ISO 8601)
-        $allowedToday = is_array($allowedDays) && in_array($todayDubai, $allowedDays, true);
+        $allowedDays = $this->normalizeAllowedDays(Setting::get('withdrawal_allowed_days', [0, 1, 2, 3, 4, 5, 6]));
+        $feeSettings = $this->withdrawalFeeService->getSettings();
+        $todayDubai = $this->todayDubaiDayIndex();
+        $allowedToday = in_array($todayDubai, $allowedDays, true);
+        $allowedDayLabels = $this->formatAllowedDayLabels($allowedDays);
 
         $kycRequiredForWithdrawal = (bool) Setting::get('kyc_required_for_withdrawal', false);
         $hasKycApproved = $user->kycDocuments()->where('status', 'approved')->exists();
@@ -47,7 +50,8 @@ class WithdrawalController extends Controller
             'withdrawals' => $withdrawals,
             'withdrawal_min_usd' => $minUsd,
             'withdrawal_allowed_days' => $allowedDays,
-            'withdrawal_fee_percent' => $feePercent,
+            'withdrawal_allowed_day_labels' => $allowedDayLabels,
+            'withdrawal_fee_settings' => $feeSettings,
             'withdrawal_allowed_today' => $allowedToday,
             'kyc_required_for_withdrawal' => $kycRequiredForWithdrawal,
             'has_kyc_approved' => $hasKycApproved,
@@ -61,12 +65,13 @@ class WithdrawalController extends Controller
         $wallet = $this->walletService->getOrCreateWallet($user);
 
         $minUsd = (float) Setting::get('withdrawal_min_usd', 20);
-        $allowedDays = Setting::get('withdrawal_allowed_days', [0, 1, 2, 3, 4, 5, 6]);
-        $feePercent = (float) Setting::get('withdrawal_fee_percent', 2);
-        $todayDubai = (int) Carbon::now('Asia/Dubai')->format('N');
+        $allowedDays = $this->normalizeAllowedDays(Setting::get('withdrawal_allowed_days', [0, 1, 2, 3, 4, 5, 6]));
+        $todayDubai = $this->todayDubaiDayIndex();
 
-        if (! (is_array($allowedDays) && in_array($todayDubai, $allowedDays, true))) {
-            return back()->withErrors(['amount' => 'Withdrawals are not allowed on this day (Dubai time). Check allowed days in settings.']);
+        if (! in_array($todayDubai, $allowedDays, true)) {
+            return back()->withErrors([
+                'amount' => 'Withdrawals are not allowed today (Dubai time). Available days: '.$this->formatAllowedDayLabels($allowedDays).'.',
+            ]);
         }
 
         $kycRequiredForWithdrawal = (bool) Setting::get('kyc_required_for_withdrawal', false);
@@ -93,14 +98,16 @@ class WithdrawalController extends Controller
         }
 
         $amount = (float) $validated['amount'];
-        $feeAmount = round($amount * ($feePercent / 100), 2);
-        $totalDeduct = $amount + $feeAmount;
+        $fee = $this->withdrawalFeeService->calculateForAmount($amount);
+        $feeAmount = $fee['fee_amount'];
+        $feePercent = $fee['percent'];
+        $totalDeduct = $fee['total_deduct'];
 
         if ((float) $wallet->withdrawal_wallet < $totalDeduct) {
-            return back()->withErrors(['amount' => 'Insufficient balance (amount + '.$feePercent.'% fee).']);
+            return back()->withErrors(['amount' => 'Insufficient balance (amount + '.$feePercent.'% fee = $'.number_format($totalDeduct, 2).').']);
         }
 
-        $withdrawal = DB::transaction(function () use ($user, $amount, $feeAmount, $usdtAddress) {
+        $withdrawal = DB::transaction(function () use ($user, $amount, $feeAmount, $feePercent, $usdtAddress) {
             $this->walletService->deductForWithdrawal($user, $amount + $feeAmount);
 
             $withdrawal = $user->withdrawals()->create([
@@ -114,7 +121,7 @@ class WithdrawalController extends Controller
             $user->transactions()->create([
                 'type' => Transaction::TYPE_WITHDRAWAL_REQUEST,
                 'amount' => -($amount + $feeAmount),
-                'meta_json' => ['status' => 'pending', 'fee' => $feeAmount],
+                'meta_json' => ['status' => 'pending', 'fee' => $feeAmount, 'fee_percent' => $feePercent],
             ]);
 
             return $withdrawal;
@@ -122,6 +129,38 @@ class WithdrawalController extends Controller
 
         Mail::to($user->email)->send(new WithdrawalRequestedMail($user, $withdrawal));
 
-        return back()->with('status', 'Withdrawal request submitted. '.$feeAmount.' USD fee applied.');
+        return back()->with('status', 'Withdrawal request submitted. $'.number_format($feeAmount, 2).' fee ('.$feePercent.'%) applied.');
+    }
+
+    /** @return list<int> 0=Sun … 6=Sat (matches admin settings checkboxes) */
+    private function normalizeAllowedDays(mixed $allowedDays): array
+    {
+        if (! is_array($allowedDays)) {
+            return [0, 1, 2, 3, 4, 5, 6];
+        }
+
+        return array_values(array_unique(array_map('intval', $allowedDays)));
+    }
+
+    private function todayDubaiDayIndex(): int
+    {
+        return (int) Carbon::now('Asia/Dubai')->dayOfWeek;
+    }
+
+    /** @param  list<int>  $allowedDays */
+    private function formatAllowedDayLabels(array $allowedDays): string
+    {
+        sort($allowedDays);
+
+        if ($allowedDays === [0, 1, 2, 3, 4, 5, 6]) {
+            return 'Every day';
+        }
+
+        $labels = array_filter(array_map(
+            fn (int $d) => self::DAY_NAMES[$d] ?? null,
+            $allowedDays
+        ));
+
+        return $labels !== [] ? implode(', ', $labels) : 'None configured';
     }
 }

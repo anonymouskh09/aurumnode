@@ -15,7 +15,9 @@ class SettingsSeeder extends Seeder
         $defaults = [
             // Withdrawals (any day by default; admin can restrict days)
             'withdrawal_min_usd' => '20',
-            'withdrawal_fee_percent' => '2',
+            'withdrawal_fee_threshold_usd' => '100',
+            'withdrawal_fee_percent_below' => '10',
+            'withdrawal_fee_percent_at_or_above' => '3',
             'withdrawal_allowed_days' => json_encode([0, 1, 2, 3, 4, 5, 6]), // All days = any time
             'kyc_required_for_withdrawal' => '0', // When 1, user must have approved KYC to withdraw
             // Direct bonus
@@ -61,6 +63,7 @@ class SettingsSeeder extends Seeder
         if (str_starts_with($key, 'roi_') || str_starts_with($key, 'contract_')) {
             return 'roi';
         }
+
         return 'general';
     }
 }
