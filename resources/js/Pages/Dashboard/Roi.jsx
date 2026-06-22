@@ -3,15 +3,10 @@ import { Card, CardHeader, CardBody, StatCard } from '@/Components/ui';
 import { Table, TableHeader, TableBody, TableRow, Th, Td, TableEmpty } from '@/Components/ui';
 import { TrendingUp, DollarSign } from 'lucide-react';
 
-export default function Roi({ logs, totalEarned, balance, totalRoiReceived }) {
+export default function Roi({ logs, balance, totalRoiReceived }) {
     return (
         <DashboardLayout title="My ROI">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-                <StatCard
-                    icon={TrendingUp}
-                    label="Total ROI earned"
-                    value={`$${(totalEarned ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}`}
-                />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                 <StatCard
                     icon={DollarSign}
                     label="ROI wallet balance"

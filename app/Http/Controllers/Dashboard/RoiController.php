@@ -20,14 +20,12 @@ class RoiController extends Controller
             ->limit(100)
             ->get();
 
-        $total = RoiLog::where('user_id', $user->id)->sum('amount');
         $wallet = $user->wallet;
         $balance = $wallet ? (float) $wallet->roi_wallet : 0;
         $totalRoiReceived = $wallet ? (float) $wallet->total_roi : 0;
 
         return Inertia::render('Dashboard/Roi', [
             'logs' => $logs,
-            'totalEarned' => round((float) $total, 2),
             'balance' => $balance,
             'totalRoiReceived' => round($totalRoiReceived, 2),
         ]);

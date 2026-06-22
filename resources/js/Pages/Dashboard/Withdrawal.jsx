@@ -43,10 +43,23 @@ export default function Withdrawal({
     const appliedFeePercent = resolveFeePercent(amountNum, withdrawal_fee_settings);
     const appliedFeeAmount = amountNum > 0 ? (amountNum * appliedFeePercent) / 100 : 0;
     const totalDeduct = amountNum > 0 ? amountNum + appliedFeeAmount : 0;
+    const rejectedWithdrawals = (withdrawals ?? []).filter((w) => w.status === 'rejected');
 
     return (
         <DashboardLayout title="Withdrawal">
             <div className="max-w-2xl space-y-6">
+                {rejectedWithdrawals.length > 0 && (
+                    <Card className="bg-red-500/10 border-red-500/30">
+                        <CardBody>
+                            <p className="text-red-200 font-medium">
+                                Your withdrawal request was rejected. Please update your USDT BEP20 withdrawal address in Profile and submit a new request.
+                            </p>
+                            <Link href="/dashboard/profile" className="inline-block mt-2 text-red-300 font-medium hover:underline">
+                                Go to Profile →
+                            </Link>
+                        </CardBody>
+                    </Card>
+                )}
                 <Card className="bg-amber-500/10 border-amber-500/30">
                     <CardBody>
                         <p className="text-sm text-slate-300">
@@ -145,7 +158,16 @@ export default function Withdrawal({
                                             <Td align="right" className="font-medium">${parseFloat(w.amount).toFixed(2)}</Td>
                                             <Td align="right" className="text-slate-400">${parseFloat(w.fee_amount ?? 0).toFixed(2)}</Td>
                                             <Td className="truncate max-w-[150px]">{w.usdt_address}</Td>
-                                            <Td><Badge variant={w.status === 'approved' ? 'success' : w.status === 'rejected' ? 'danger' : 'pending'}>{w.status}</Badge></Td>
+                                            <Td>
+                                                <Badge variant={w.status === 'approved' ? 'success' : w.status === 'rejected' ? 'danger' : 'pending'}>
+                                                    {w.status}
+                                                </Badge>
+                                                {w.status === 'rejected' && (
+                                                    <p className="mt-1 text-xs text-red-400 max-w-[200px]">
+                                                        Rejected — please correct your USDT BEP20 address in Profile.
+                                                    </p>
+                                                )}
+                                            </Td>
                                             <Td className="text-slate-400">{new Date(w.requested_at).toLocaleString()}</Td>
                                         </TableRow>
                                     ))
